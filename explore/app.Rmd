@@ -1,0 +1,63 @@
+---
+title: "Play with Maps"
+runtime: shiny
+output: html_document
+---
+
+
+  ```{r data_prep, echo=FALSE, warning=FALSE, results="hide"}
+
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+setwd("~/mydoc/research/mofi/continuing/R")
+source("functions.R")
+
+data.cache( extract_data )
+```
+
+```{r ui, echo=FALSE, warning=FALSE}
+
+    sliderInput(inputId = "target_category",
+                label = "target category",
+                min = 1,
+                max = 4,
+                value = 1)
+
+```
+
+```{r server, echo=FALSE, warning=FALSE}
+renderPlot({
+#
+    df_patient  %>%
+      inner_join( df_patient_usage, by=c("pin")) %>%
+      filter(is_geographic_LGA(lga)) %>%			
+      group_by( lga, usage_category ) %>%
+      summarise( n_user = n() * multiplier ) %>%
+      join_population_grouped( qw( "lga usage_category" )) %>%
+      mutate( proportion = n_user / population  * 100 ) %>%
+      group_by( usage_category ) %>%
+      mutate( usage_level = cut( proportion, 4, 
+                                qw("low medium high very_high"), 
+                                ordered=TRUE )) %>%
+      ungroup() %>%
+      filter( as.integer(usage_category)==input$target_category ) %>%
+      append_data( base_map, 
+                  ., 
+                  key.shp="LGA_CODE11", 
+                  key.data="lga" 
+                  ) -> df
+#
+    df %>%
+      tm_shape( ) + 
+      tm_polygons( "usage_level", 
+          title = paste("Number of level ", target_category, "users in this LGA")
+          ) +
+                      tm_layout(frame=FALSE,
+                                legend.position = c("right", "top"), bg.color="lightgreen",
+                                inner.margins = c(.25,.02,.02,.25)) 
+  })
+#
+```
+
+

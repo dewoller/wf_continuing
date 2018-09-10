@@ -1,0 +1,222 @@
+
+---
+title: "Check"
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-04-30"
+output: 
+  word_document:
+    reference_docx: ../../common/word_reference_style.docx
+---
+
+
+```{r set-options, echo=FALSE, cache=FALSE, warning=FALSE, results='hide'}
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+setwd("~/mydoc/research/mofi/continuing/R")
+source("functions.R")
+source("get_data.R")
+source("generate_data_frames.R")
+source("standardisation.R")
+```
+#Methods
+
+```{r data_preparation, echo=FALSE, cache=FALSE, results="hide", warning=FALSE}
+
+data.cache( generate_data_frames, frequency='yearly')
+
+readstata13::read.dta13( 'check/Output_for_Dennis.dta') %>%
+  as.tibble() %>%
+  rename( lga=LGA,
+         pin=ID, 
+         sex=gender,
+         quantity=qty,
+         quarter=dup,
+         supply_date=DateSupply,
+         unit_wt = Unit_wt,
+         ddd_mg_factor = DDD,
+		 item_code = Item_code 
+         )  %>%
+  mutate( state=str_trim( state ),
+        age = age_grouping_mofi( age),
+        lga = as.character( lga ) ,
+		item_code = str_trim(item_code ), 
+        unit_wt=ifelse( item_code=='02124T', 2000, unit_wt),
+		ddd_mg_factor=ifelse( item_code=='08423H', 4, ddd_mg_factor),
+        n_dose=quantity * unit_wt / ddd_mg_factor ,
+        supply_year=as.factor(substring( supply_date,6,9 ))
+        )  %>%
+  filter( lga != '89399' & state!='ACT' & item_code != '91194Q' ) %>% 
+  { . } -> mofi
+
+
+```
+
+#powerpoint slide 1
+
+```{r ppt_1, echo=TRUE}
+
+
+df_patient_dose %>%
+  inner_join( df_patient_usage ) %>%
+  inner_join( df_patient ) %>%
+  ungroup() -> df_initial
+
+
+df_initial %>%
+  filter( lga==10050) %>%
+  select_and_standardise_ddd(standardise_over=qw('lga usage_category'), 
+                             join_with= c('supply_year'), 
+                             f_join_population
+                             ) %>% ungroup() %>% summarize( sum(ddd) )
+
+df_initial %>%
+  filter( lga==10050) %>%
+  select_and_standardise_ddd(standardise_over=qw('lga'), 
+                             join_with= c('supply_year'), 
+                             f_join_population
+                             ) 
+df_initial %>%
+  filter( lga==10050) %>%
+  select_and_standardise_ddd(standardise_over=qw('lga usage_category'), 
+                              join_with= c('supply_year'), 
+                              f_join_population
+                              ) 
+
+standardise_using <- qw("age sex")  %>%   
+  setdiff( standardise_over ) %>% 
+    setdiff( join_with )
+
+
+a %>%
+  ungroup() %>%
+  filter( lga==10050) %>%
+  filter( usage_category=='regular') %>%
+  filter( supply_year=='2013') %>%
+  group_by( lga, supply_year, age, sex, usage_category ) %>%
+  summarise( n_dose = sum(n_dose)) %>%
+  f_join_population( rollup_level=qw('lga supply_year age sex')) %>% 
+  mutate( ddd = (n_dose * 1000 * 10) / (population * my_year_length( supply_year ) )) %>%  
+  select( -population ) %>%
+  f_join_population( rollup_level=qw('supply_year age sex')) %>%  # get totals for each lga
+  mutate( ddd_standardized = ddd * population ) %>%  
+  select( -population ) %>%
+  group_by( lga, supply_year, usage_category ) %>%
+  summarise( ddd_standardized = sum(ddd_standardized )) %>%
+  f_join_population ( c('supply_year') ) %>% 
+  # divide by the total population, and standardisation finished
+  mutate( ddd = ddd_standardized / population ) %>%  
+  select( lga, supply_year, usage_category, ddd ) %>%
+  ungroup()
+
+a %>%
+  ungroup() %>%
+  filter( supply_year=='2013') %>%
+  group_by( supply_year, age, sex, usage_category ) %>%
+  summarise( n_dose = sum(n_dose)) %>%
+  f_join_population( rollup_level=qw('supply_year age sex')) %>% 
+  mutate( ddd = (n_dose * 1000 * 10) / (population * my_year_length( supply_year ) )) %>%  
+  select( -population ) %>%
+  f_join_population( rollup_level=qw('supply_year age sex')) %>%  
+  mutate( ddd_standardized = ddd * population ) %>%  
+    select( -population ) %>%
+    group_by( supply_year, usage_category ) %>%
+    summarise( ddd_standardized = sum(ddd_standardized )) %>%
+    f_join_population ( c('supply_year') ) %>% 
+    # divide by the total population, and standardisation finished
+    mutate( ddd = ddd_standardized / population ) %>%  
+    select( supply_year, usage_category, ddd ) %>%
+    ungroup()
+
+# code to show individual level differences
+mofi %>% distinct( item_code, unit_wt) %>% filter( item_code=='02124T')
+mofi %>% filter( pin == 17639347) %>% View
+df %>% filter( pin == 17639347) %>% View
+df_patient_dose %>% filter( pin == 21792435) %>% View
+
+mofi %>% group_by( pin ) %>% summarize( sm=sum(quantity * unit_wt / ddd_mg_factor) ) -> a
+df %>% group_by( pin ) %>% summarize( sd=sum(n_dose) ) -> b
+
+a %>% inner_join( b , by='pin' ) -> c
+
+c %>%  mutate( diff = (sd - sm), adiff=abs(diff)  ) %>%
+	filter( adiff>1) %>%
+	arrange( desc( adiff )) -> d
+
+df %>%
+  inner_join( d, by='pin') %>%
+  count( type_name, item_code, sort=TRUE)
+
+
+
+
+df %>% summarize( sum(quantity) )
+mofi %>% summarize( sum(quantity) )
+
+df %>% summarize( sum(n_dose) )
+mofi %>% summarize( sum(ddd_mg_factor, na.rm=TRUE) )
+
+df %>% distinct( lga ) %>% count()
+
+
+mofi %>%  filter( is.na(lga) ) %>% count()
+df %>% filter( lga=='.') %>% count() 
+
+
+
+intersect(a,b) 
+setdiff(a,b) 
+setdiff(b,a) 
+
+mofi %>% distinct( pin ) %>% setdiff( df %>% distinct( pin ))
+mofi  %>% filter( !( supply_date, 5 )  %>% distinct( pin ) %>% setdiff( df %>% distinct( pin ))
+df %>% distinct( pin ) %>% setdiff( mofi %>% distinct( pin ))
+
+mofi %>% filter( pin==74301)
+
+df
+
+
+
+
+
+a %<>% as.tibble( a) 
+
+
+population=read.dta13( 'check/nsw_vic_populato_and_seifa_data.dta')
+
+
+
+
+
+df_patient_type %>%
+	inner_join( df_patient_usage ) %>%
+	inner_join( df_patient ) %>%
+	select( pin, usage_category, supply_year, age, sex, n_dose) %>% 
+	select_and_standardise_ddd( standardise_over=qw( "age supply_year usage_category" )) %>%
+	mutate( year_age  = paste( age,supply_year) ) %>%
+	select( -supply_year, -age ) %>%
+	mutate( ddd=round(ddd,2)) %>%
+	spread( year_age, ddd ) %>%
+	write.csv('/tmp/a.csv')
+
+	kable() %>% clipr::write_clip()
+
+
+	df_patient_dose %>%
+		inner_join( df_patient_usage ) %>%
+		inner_join( df_patient ) %>%
+		group_by( state, usage_category, supply_year) %>% 
+		summarise( n_dose = sum( n_dose ) )  %>%
+		join_population_grouped( qw("state supply_year")) %>% 
+		ungroup() %>%
+		mutate( ddd = (n_dose * 1000 * 10) / (person_days)) %>% 
+		mutate( year_age  = paste( state, supply_year) ) %>%
+		select( ddd, usage_category, year_age) %>%
+		mutate( ddd=round(ddd,2)) %>%
+		spread( year_age, ddd ) %>%
+		write.csv('/tmp/b.csv')
+
+		ungroup() %>%
+		print()
+

@@ -1,0 +1,70 @@
+
+---
+title: "Hypothesis 3"
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-04-30"
+output: 
+  word_document:
+    reference_docx: ../../common/word_reference_style.docx
+  html_document:
+    code_folding: hide
+---
+
+
+```{r set-options, echo=FALSE, cache=FALSE, warning=FALSE, results='hide'}
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+source("lib/functions.R")
+source("lib/standardisation.R")
+source("lib/get_data.R")
+source("lib/generate_data_frames.R")
+```
+#Methods
+
+```{r data_preparation, echo=FALSE, cache=FALSE, results="hide", warning=FALSE}
+
+data.cache( generate_data_frames, frequency='yearly')
+
+```
+
+```{r ppt_1, echo=FALSE}
+
+
+read.dta13('data/Australian_population_for_merging.dta') %>%
+  rename( age = age4, 
+         sex = sex2,
+         population = AusPop ) %>%
+  as.tibble() %>% 
+  { . } -> df_auspop
+
+get_population_df() %>%
+  group_by( age, sex, supply_year ) %>%
+  summarise( population = sum( population ) )
+
+#todo
+df_patient_dose %>%
+  inner_join( df_patient_usage ) %>%
+  inner_join( df_patient ) %>%
+  ungroup() %>%
+  select_and_standardise_ddd(standardise_over=qw('lga usage_category'), 
+                             join_with= c('supply_year'), 
+                             f_join_population
+                             ) %>% 
+                             { . } -> df_lga_usage_ddd  
+
+df_lga_usage_ddd %>%
+  group_by( supply_year, usage_category ) %>%
+  mutate( ddd_group = cut( ddd, 
+                          quantile(ddd, probs= c(0, 0.25, 0.5, 0.75, 1) ), 
+                          labels=as.character(1:4), 
+                          include.lowest=TRUE) ) %>%
+  ungroup() %>%
+  { . } ->  lga_ddd_cut
+
+
+```
+
+
+
+

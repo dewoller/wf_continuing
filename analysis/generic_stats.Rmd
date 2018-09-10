@@ -1,0 +1,204 @@
+---
+title: "Ongoing Opioid Usage Data Exploration"
+author:  "Dennis Wollersheim"
+date: "2018-04-11"
+output: 
+  word_document:
+    reference_docx: ../../common/word_reference_style.docx
+---
+
+
+```{r set-options, echo=FALSE, cache=FALSE, warn=FALSE}
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+setwd("~/mydoc/research/mofi/continuing/R")
+source("functions.R")
+```
+#Methods
+
+```{r data_preparation, echo=FALSE, cache=FALSE, results="hide", warn=FALSE}
+
+df <- get_continuing_df('continuing') %>%
+  filter(state %in% c("NSW", "VIC"))
+# 
+# list all schemes
+df %>% 
+  select( pin, scheme ) %>%
+  unique() %>%
+  group_by(pin) %>% 
+  summarise( all_scheme=paste(sort(scheme), collapse=','))  %>%
+  {.} -> df_patient_scheme
+#
+# select out patients
+#
+
+df %>% 
+  select (pin, gender, age, state) %>% 
+  unique()  %>%
+  join( df_patient_scheme, by="pin") %>%
+  as.tibble() %>%
+  {.} -> df_patients
+#
+
+df %<>% 
+	select( -gender, -age, -state, -scheme ) %>%
+	mutate( quarter = quarter(supply_date, with_year = TRUE))
+
+```
+
+<!---
+	Patients who were dispensed at least in 15 quarters were identified as regular users.
+Patients who were dispensed at least in 9 quarters were identified as long-term users.
+Patients who were dispensed 1-8 quarters were identified as short-term users.
+Patients who were dispensed just one occasion only were identified as one off users.
+--->
+```{r}
+
+df%>%
+	group_by(pin,  type_name) %>%
+	summarise( n_dose = sum(no_doses),
+			  quantity = sum(quantity),
+			  n_script = n(),
+			  n_quarter = n_distinct( quarter ),
+			  n_quarter_tmp = ifelse( n_script==1, 0, n_quarter ),
+			  usage_category= cut( n_quarter_tmp, 
+								  c(-1, 0,8,14, 999999), 
+								  labels = qw("one-off short-term long-term regular")
+								  ) ) %>%
+	select( -n_quarter_tmp ) %>%
+	{.} -> df_patient_type
+
+df%>%
+  group_by(pin) %>%
+  summarise( n_dose = sum(no_doses),
+			quantity = sum(quantity),
+			n_script = n(),
+			n_quarter = n_distinct( quarter ),
+			n_quarter_tmp = ifelse( n_script==1, 0, n_quarter ),
+			usage_category= cut( n_quarter_tmp, 
+							c(-1, 0,8,14, 999999), 
+							labels = qw("one-off short-term long-term regular")
+							) ) %>%
+  			select( -n_quarter_tmp ) %>%
+			{.} -> df_patient_usage
+
+```
+
+# distribution of the different drug genders, total count and percent
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %>%
+  filter(state %in% c("NSW", "VIC")) %$%
+  table(.$gender, .$state) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=gender), stat="count" ) + 
+  ggtitle("") 
+
+```
+
+
+# distribution of the different drug users, total count and percent
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %>%
+  group_by( usage_category) %>%
+  summarize( n_patients = n()) %>%
+  mutate( proportion = round(n_patients / sum(n_patients),4) * 100 ) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("") 
+```
+
+# distribution of the different user types by drug type, in percent for each drug type
+### note this is different from the user types above, because it is broken down by drug
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %$%
+  table(.$usage_category, .$type_name) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("User counts for each state, drug type and user category") +
+  facet_wrap(~type_name , scales="free") 
+```
+
+# distribution of the different user types by gender, in percent for each gender
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %$%
+  table(.$usage_category, .$gender) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("User counts for each state, gender type and user category") +
+  facet_wrap(~gender , scales="free") 
+
+```
+
+# distribution of the different user types by age_group, in percent for each age group
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  mutate( age_group= age_grouping( age, 20 )) %>%
+  as.tibble()  %$%
+  table(.$usage_category, age_group) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %>%
+  mutate( age_group= age_grouping( age, 20 )) %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("User counts for each state, age group and user category") +
+  facet_wrap(~age_group , scales="free") 
+```
+
+# distribution of the different user types by payment scheme, in percent for each payment scheme
+# note, some people have more than one payment scheme
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %$%
+  table(.$usage_category, .$all_scheme) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_usage, by=c("pin")) %>%
+  as.tibble()  %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("User counts for each state, payment scheme and user category") +
+  facet_wrap(~all_scheme , scales="free") 
+```
+
+```
+

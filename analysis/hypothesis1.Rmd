@@ -1,0 +1,401 @@
+---
+title: "Hypothesis 1"
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-04-30"
+output: 
+  word_document:
+    reference_docx: word_reference_style.docx
+---
+```{r}
+
+getwd()
+```
+
+
+```{r results='hide', message=FALSE, warning=FALSE}
+
+
+
+
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+getwd()
+source("lib/functions.R")
+source("lib/standardisation.R")
+source("lib/get_data.R")
+source("lib/generate_data_frames.R")
+```
+#Methods
+
+```{r results='hide', message=FALSE, warning=FALSE}
+
+
+data.cache( generate_data_frames )
+
+```
+
+# Methods
+Patients who were dispensed at least in 15 quarters were identified as regular users.
+Patients who were dispensed at least in 9 quarters were identified as long-term users.
+Patients who were dispensed 1-8 quarters were identified as short-term users.
+Patients who were dispensed just one occasion only were identified as one off users.
+
+
+
+#Distribution of types of users in two states, stratified by age-group and sex
+```{r user_type_by_age_sex_state, echo=FALSE}
+
+df_patient  %>% 
+	inner_join( df_patient_usage, by=c("pin")) %>%
+	group_by( state, age, sex ) %>%
+	summarize( n_patients = n()) %>%
+	ungroup() %>%
+	mutate( state_sex=paste( state, sex, sep='_')) %>%
+	select(-state, -sex ) %>%
+	spread(state_sex, n_patients) %>%
+	arrange( age ) %>%
+	kable()
+
+```
+
+#Distribution of types of users in two states, group proportion for the state and sex
+```{r user_type_by_age_sex_state_prop1, echo=FALSE}
+
+df_patient  %>%
+	inner_join( df_patient_usage, by=c("pin")) %>%
+	select( state, age, sex ) %>%
+	mutate( state_sex=paste( state, sex, sep='_')) %>%
+	group_by(state_sex, age )  %>%
+	summarise( n=n()) %>%
+	group_by(state_sex)  %>%
+	mutate(  freq = round(n / sum(n)*100,2) ) %>%
+	select(-n) %>%
+	spread( state_sex, freq) %>%
+	kable()
+
+```
+
+#Distribution of types of users in two states, group proportion for the age group
+```{r user_type_by_age_sex_state_prop2, echo=FALSE}
+
+df_patient  %>%
+	inner_join( df_patient_usage, by=c("pin")) %>%
+	select( state, age, sex ) %>%
+	mutate( state_sex=paste( state, sex, sep='_')) %>%
+	group_by(state_sex, age )  %>%
+	summarise( n=n()) %>%
+	group_by(age)  %>%
+	mutate(  freq = round(n / sum(n)*100,2) ) %>%
+	select(-n) %>%
+	spread( state_sex, freq) %>%
+	kable()
+
+```
+
+
+#What proportion of prescriptions and DDDs are consumed by the regular, long-term, short-term and one-off users? - combined and state-wise
+
+## Combined NSW and VIC total scripts first first
+
+```{r ddd_by_usertype_combined, echo=FALSE}
+df_patient_dose %>%
+  group_by(pin) %>%
+  summarise(n_script = sum( n_script ) ) %>%
+  inner_join( df_patient, by=c('pin')) %>%
+  inner_join( df_patient_usage, by=c("pin")) %>%
+  group_by( usage_category ) %>%
+  summarise(  n_script=sum(n_script)) %>%
+  kable()
+
+```	
+
+## State level # of scripts total 
+
+```{r scripts_by_usertype_state, echo=FALSE}
+
+df_patient_dose %>%
+  group_by(pin) %>%
+  summarise(n_script = sum( n_script ) ) %>%
+  inner_join( df_patient, by=c('pin')) %>%
+	inner_join( df_patient_usage, by=c("pin")) %>%
+	select( state, usage_category, n_script) %>%
+	group_by(state, usage_category)  %>%
+	summarise( n_script = sum(n_script)) %>%
+	spread( state, n_script) %>%
+	kable()
+
+```	
+
+## State level total scripts  percentage of total
+
+```{r ddd_by_usertype_state_proportion, echo=FALSE, warning=FALSE}
+
+
+df_patient_dose %>%
+  group_by(pin) %>%
+  summarise(n_script = sum( n_script ) ) %>%
+  inner_join( df_patient, by=c('pin')) %>%
+	inner_join( df_patient_usage, by=c("pin")) %>%
+	select( state, usage_category, n_script) %>%
+	group_by(state, usage_category)  %>%
+	summarise( n_script = sum(n_script)) %>%
+	group_by(state)  %>%
+	mutate(  prop = round(n_script / sum(n_script)*100,2) ) %>%
+	select(-n_script) %>%
+	spread( state, prop) %>%
+	kable()
+
+```	
+
+## State level DDD actual standardised
+
+```{r ddd_by_usertype_state_actual, echo=FALSE, warning=FALSE}
+debug(select_and_standardise_ddd)
+
+
+df_patient_dose %>%
+  group_by(pin, supply_year) %>%
+  summarise(n_dose = sum( n_dose ) ) %>%
+  inner_join( df_patient, by=c('pin')) %>%
+  inner_join( df_patient_usage, by=c("pin")) %>%
+	select_and_standardise_ddd( standardise_over=qw( "state" ), join_with=qw("usage_category supply_year") ) %>%
+	spread( state, ddd) %>%
+	kable()
+
+ ```
+
+ ## State level DDD proportion % of state total
+
+```{r ddd_by_usertype_state_prop, echo=FALSE, warning=FALSE}
+df_patient_dose %>%
+  group_by(pin, supply_year) %>%
+  summarise(n_dose = sum( n_dose ) ) %>%
+  inner_join( df_patient, by=c('pin')) %>%
+  inner_join( df_patient_usage, by=c("pin")) %>%
+	select_and_standardise_ddd( standardise_over=qw( "state" ), 
+	                           join_with=qw("usage_category supply_year") ) %>%
+	group_by(state)  %>%
+	mutate(  prop = round(ddd / sum(ddd)*100,2) ) %>%
+	select(-ddd) %>%
+	spread( state, prop) %>%
+	kable()
+
+```
+
+#Is there any trend in type of users on type of opioids? E.g. regular users use xxx more than others etc.
+
+```{r linear_model, echo=FALSE, warning=FALSE}
+
+modelFormula = usage_category ~ all_scheme+sex++age+population+seifa+urbanization
+df_patient  %>%
+	inner_join( df_patient_usage, by=c("pin")) %>%
+	mutate(all_scheme=as.factor(all_scheme)) %>%
+	f_join_population( rollup_level= qw("seifa urbanization lga"), 
+							join_key=qw("lga"))  %>%
+	clm( modelFormula, data=. ) %>%
+	{.} -> model
+summary(model)
+
+```
+
+# plotting usage_category and population, raw and proportional
+
+```{r Population_vs_category, echo=FALSE}
+df_patient  %>%
+	inner_join( df_patient_usage, by=c("pin")) %>%
+	f_join_population( rollup_level= qw("seifa urbanization lga"), 
+							join_key=qw("lga"))  %>%
+	{.} -> ds
+
+ds %>% ggplot( mapping=aes(x=population, fill=usage_category)) + geom_density(alpha=0.5)
+
+ds %>% ggplot( mapping=aes(y=population, x=usage_category)) + geom_boxplot()
+
+```
+
+# plotting usage_category and scheme, both raw and proportional
+
+```{r category_vs_scheme, echo=FALSE}
+
+ds %>% ggplot( aes( usage_category, ..count..)) + geom_bar(aes(fill=all_scheme))
+
+ds %>% ggplot( aes( usage_category, ..count..)) + geom_bar(aes(fill=all_scheme), position='fill')
+
+```
+
+
+
+# plotting usage_category and age, both raw and proportional
+
+```{r category_vs_age, echo=FALSE}
+
+ds %>% ggplot( aes( usage_category, ..count..)) + geom_bar(aes(fill=age))
+
+ds %>% ggplot( aes( usage_category, ..count..)) + geom_bar(aes(fill=age), position='fill')
+
+```
+
+
+# plotting usage_category and seifa, both raw and proportional
+
+```{r category_vs_seifa, echo=FALSE}
+
+ds %>% ggplot( aes( usage_category, ..count..)) + geom_bar(aes(fill=seifa))
+
+ds %>% ggplot( aes( usage_category, ..count..)) + geom_bar(aes(fill=seifa), position='fill')
+
+
+```
+
+# plotting usage_category and urbanisation, raw and proportional
+
+```{r cateory_vs_urbanisation, echo=FALSE}
+ds %>% ggplot( aes( usage_category, ..count..)) + geom_bar(aes(fill=urbanization))
+
+ds %>% ggplot( aes( usage_category, ..count..)) + geom_bar(aes(fill=urbanization), position='fill')
+
+```
+
+#Identify the LGAs that have higher RATE of regular and long-term users (proportional to population)
+# after standardization for age and sex.
+
+```{r lga_by_certain_user_types, echo=FALSE}
+#
+#df_patient  %>%
+#	inner_join( df_patient_usage, by=c("pin")) %>%
+#	group_by( lga, usage_category, age, sex ) %>%
+#	summarise( n_user = n()) %>%
+#	filter(is_geographic_LGA(lga)) %>%
+#	filter( as.integer(usage_category) > 2 ) %>%
+#	simple_standardise_value( standardise_using=qw( "age sex" ), 
+#								 standardise_across=qw("lga"), 
+#								 count_var=.$n_user ) %>%
+#	group_by( usage_category ) %>%
+#	mutate( usage_level = cut( proportion, 4, 
+#							  qw("low medium high very_high"), 
+#							  ordered=TRUE )) %>%
+#	ungroup() %>%
+#	{.} -> df_lga_summary
+##
+
+
+print_map_set = function( target_category, name ) {
+	df_lga_summary %>% 
+		filter( as.integer(usage_category)==target_category ) %>%
+		append_data( base_map, 
+					., 
+					key.shp="LGA_CODE11", 
+					key.data="lga" 
+					) -> df
+		
+		df %>%
+		tm_shape( ) + 
+		tm_polygons( "usage_level", 
+					title = paste("Number of", name, "users in this LGA")
+					) +
+		tm_layout(frame=FALSE,
+				legend.position = c("right", "top"), bg.color="lightgreen",
+				inner.margins = c(.25,.02,.02,.25)) %>%
+		{.} -> map
+#
+#
+	df %>%
+		tm_shape( xlim=get_state_capital_xlim(2),
+				 ylim=get_state_capital_ylim(2) ) +
+		tm_polygons( "usage_level", legend.show=FALSE) +
+		tm_layout(frame=FALSE, bg.color="lightgreen")  %>%
+		{.} -> m_melbourne
+
+	df %>% 
+		tm_shape( xlim=get_state_capital_xlim(1),
+				ylim=get_state_capital_ylim(1) ) +
+			tm_polygons( "usage_level", legend.show=FALSE) +
+			tm_layout(frame=FALSE, bg.color="lightgreen")  %>%
+		{.} -> m_sydney
+
+	print(map)	
+	# print insets
+	print(m_sydney, vp=viewport(x= .6, y= .4, width= 0.2, height= 0.2))
+	print(m_melbourne, vp=viewport(x= 0.27, y= 0.15, width= 0.2, height= 0.2))
+}
+
+#print_map_set( 3, 'long-term')
+#print_map_set( 4, 'regular')
+
+
+```
+```{r play_with_maps}
+
+#
+df_patient_dose %>%
+  group_by(pin, supply_year) %>%
+  summarise(n_dose = sum( n_dose ) ) %>%
+  inner_join( df_patient, by=c('pin')) %>%
+	inner_join( df_patient_usage, by=c("pin")) %>%
+	filter(is_geographic_LGA(lga)) %>%			
+	select_and_standardise_ddd( standardise_over=qw( "lga" ), join_with="usage_category" ) %>%
+	group_by( usage_category ) %>%
+	mutate( usage_level = cut( ddd, 4, 
+							  qw("low medium high very_high"), 
+							  ordered=TRUE )) %>%
+	ungroup() %>%
+	{.} -> df_lga_summary
+
+target_category=1
+name='ads'
+  
+  #
+print_map_ddd = function( target_category, name ) {
+
+	df_lga_summary %>% 
+		filter( as.integer(usage_category)==target_category ) %>%
+		append_data( base_map, 
+					., 
+					key.shp="LGA_CODE11", 
+					key.data="lga" 
+					) %>%
+		{.} -> df
+
+	df %>%
+		tm_shape( ) + 
+		tm_polygons( "ddd", 
+					title = paste("DDD of ", name, "users ")
+					) +
+		tm_layout(frame=FALSE,
+				legend.position = c("right", "top"), bg.color="lightgreen",
+				inner.margins = c(.25,.02,.02,.25)) %>%
+		{.} -> map
+
+	df %>%
+			tm_shape( xlim=get_state_capital_xlim(2),
+					ylim=get_state_capital_ylim(2) ) +
+		tm_polygons( "ddd", legend.show=FALSE) +
+		tm_layout(frame=FALSE, bg.color="lightgreen")  %>%
+		{.} -> m_melbourne
+
+	df %>% 
+		tm_shape( xlim=get_state_capital_xlim(1),
+				ylim=get_state_capital_ylim(1) ) +
+		tm_polygons( "ddd", legend.show=FALSE) +
+		tm_layout(frame=FALSE, bg.color="lightgreen")  %>%
+		{.} -> m_sydney
+
+	print(map)	
+	# print insets
+	print(m_sydney, vp=viewport(x= .55, y= .5, width= 0.2, height= 0.2))
+	print(m_melbourne, vp=viewport(x= 0.27, y= 0.15, width= 0.2, height= 0.2))
+	ggsave( paste0('/tmp/', name, '.png'))
+}
+name='One off'
+print_map_ddd ( 4, 'Regular')
+print_map_ddd ( 3, 'Long term')
+print_map_ddd ( 2, 'Short term')
+print_map_ddd ( 1, 'One off')
+
+```
+
+
+
+
+

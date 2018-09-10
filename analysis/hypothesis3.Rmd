@@ -1,0 +1,187 @@
+---
+title: "Hypothesis 3"
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-04-30"
+output: 
+  word_document:
+    reference_docx: ../../common/word_reference_style.docx
+  html_document:
+    code_folding: hide
+---
+
+
+```{r set-options, echo=FALSE, cache=FALSE, warning=FALSE, results='hide'}
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+source("lib/functions.R")
+source("lib/standardisation.R")
+source("lib/get_data.R")
+source("lib/generate_data_frames.R")
+```
+#Methods
+
+```{r data_preparation, echo=FALSE, cache=FALSE, results="hide", warning=FALSE}
+
+data.cache( generate_data_frames, frequency='yearly')
+
+```
+
+# Methods
+Patients who were dispensed at least in 15 quarters were identified as regular users.
+Patients who were dispensed at least in 9 quarters were identified as long-term users.
+Patients who were dispensed 1-8 quarters were identified as short-term users.
+Patients who were dispensed just one occasion only were identified as one off users.
+
+# plan
+# find total doses and therefore ddd for each subgroup and LGA ( usage_category )
+1) total doses for each subgroup, year, and lga (and age and sex )
+2) normalise doses for each subgroup, based on age and sex for entire country
+2a) take n_doses, divide by ratio for lga, and multiply by the ratio for the country
+3) total normalised doses for entire lga
+4) find ddd based on entire population for this lga and days_in_year (person_days)
+
+
+```{r ppt_1, echo=FALSE}
+
+
+
+
+read.dta13('data/Australian_population_for_merging.dta') %>%
+  rename( age = age4, 
+         sex = sex2,
+         population = AusPop ) %>%
+  as.tibble() %>% 
+  { . } -> df_auspop
+
+get_population_df() %>%
+  group_by( age, sex, supply_year ) %>%
+  summarise( population = sum( population ) )
+
+#todo
+df_patient_dose %>%
+  inner_join( df_patient_usage ) %>%
+  inner_join( df_patient ) %>%
+  ungroup() %>%
+  select_and_standardise_ddd(standardise_over=qw('lga usage_category'), 
+                             join_with= c('supply_year'), 
+                             f_join_population
+                             ) %>% 
+                             { . } -> df_lga_usage_ddd  
+
+df_lga_usage_ddd %>%
+  group_by( supply_year, usage_category ) %>%
+  mutate( ddd_group = cut( ddd, 
+                          quantile(ddd, probs= c(0, 0.25, 0.5, 0.75, 1) ), 
+                          labels=as.character(1:4), 
+                          include.lowest=TRUE) ) %>%
+  ungroup() %>%
+  { . } ->  lga_ddd_cut
+
+write.csv( lga_ddd_cut,  'data/lgas_year_type_ddd.csv')
+
+df_patient_dose %>%
+	inner_join( df_patient_usage ) %>%
+	inner_join( df_patient ) %>%
+    select_and_standardise_ddd(standardise_over=qw('age usage_category'), 
+                               join_with= c('supply_year'), 
+                               f_join_population
+                               ) %>% 
+	mutate( year_age  = paste( age,supply_year) ) %>%
+	select( -supply_year, -age ) %>%
+	mutate( ddd=round(ddd,2)) %>%
+	spread( year_age, ddd ) %>%
+	write.csv('data/year_age_standardised.csv')
+
+
+	df_patient_dose %>%
+		inner_join( df_patient_usage ) %>%
+		inner_join( df_patient ) %>%
+        select_and_standardise_ddd(standardise_over=qw('state usage_category'), 
+                                   join_with= c('supply_year'), 
+                                   f_join_population
+                                   ) %>% 
+    	mutate( year_state  = paste( state, supply_year) ) %>%
+		select( ddd, usage_category, year_state) %>%
+		mutate( ddd=round(ddd,2)) %>%
+		spread( year_state, ddd ) %>%
+		write.csv('data/year_state_category_standardised.csv')
+
+
+df %>% 
+	mutate( state = ifelse( state=="VIC", "VIC", "NSW")) %>% 
+	group_by( supply_year, state ) %>% 
+	summarise( n_dose = sum(n_dose))  %>% 
+	write.csv( 'data/doses.csv')
+
+get_population_grouped(df_population, qw('state supply_year')) %>% 
+	ungroup() %>%
+	select(state, supply_year, population) %>%
+	group_by( supply_year, state ) %>% 
+	summarise( population = sum(population))  %>%
+	write.csv('data/pop.csv')
+
+
+
+
+shiny::runApp('explore/shiny/', display.mode = "normal")
+
+target_category=4
+name='asdf'
+
+  #
+print_map_ddd = function( target_category, name ) {
+
+  lga_ddd_cut  %>%
+    mutate( lga = as.factor( lga )) %>%
+    filter( as.numeric(usage_category) ==target_category  & ddd_group == 4) %>%
+    count( lga ) %>% 
+    complete( lga, fill = list(n=0))  %>%
+    mutate( lga=as.character(lga)) %>% 
+    rbind( data.frame( lga=c(11860, 89399), n=0)) %>%
+    mutate( n=as.ordered(n)) %>% 
+      append_data( base_map, 
+                  ., 
+                  key.shp="LGA_CODE11", 
+                  key.data="lga" 
+                  )  %>%
+      {.} -> df
+
+    df %>%
+      tm_shape( ) + 
+      tm_polygons( "n", 
+                  title = paste("Years", name, "users in highest quartile DDD ")
+                  ) +
+      tm_layout(frame=FALSE,
+                legend.position = c("right", "top"), bg.color="lightgreen",
+                inner.margins = c(.25,.02,.02,.25)) %>%
+      {.} -> map
+
+    df %>%
+      tm_shape( xlim=get_state_capital_xlim(2),
+               ylim=get_state_capital_ylim(2) ) +
+      tm_polygons( "n", legend.show=FALSE) +
+      tm_layout(frame=FALSE, bg.color="lightgreen")  %>%
+      {.} -> m_melbourne
+
+    df %>% 
+      tm_shape( xlim=get_state_capital_xlim(1),
+               ylim=get_state_capital_ylim(1) ) +
+      tm_polygons( "n", legend.show=FALSE) +
+      tm_layout(frame=FALSE, bg.color="lightgreen")  %>%
+      {.} -> m_sydney
+
+    print(map)	
+    # print insets
+    print(m_sydney, vp=viewport(x= .55, y= .5, width= 0.2, height= 0.2))
+    print(m_melbourne, vp=viewport(x= 0.27, y= 0.15, width= 0.2, height= 0.2))
+    save_tmap( map, paste0('/tmp/', name, '.png') )
+}
+  name='One off'
+  print_map_ddd ( 4, 'regular')
+  print_map_ddd ( 3, 'long term')
+  print_map_ddd ( 2, 'Short term')
+  print_map_ddd ( 1, 'One off')
+
+```
+

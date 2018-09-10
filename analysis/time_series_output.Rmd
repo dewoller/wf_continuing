@@ -1,0 +1,350 @@
+---
+title: "Ongoing Opioid Usage Data Exploration"
+author:  "Dennis Wollersheim"
+date: "2018-04-11"
+output: 
+  word_document:
+    reference_docx: ../../common/word_reference_style.docx
+---
+
+
+```{r set-options, echo=FALSE, cache=FALSE}
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+setwd("~/mydoc/research/mofi/continuing/R")
+source("functions.R")
+```
+#Methods
+
+
+we 
+
+
+We divide drug consumers based on their usage duration and consistency into three categories: one-off, episodic, and continuous. We estimate drug usage duration based on the number of doses in a prescription, where number of doses is based on number of pills, scheduled time wearing patches, or number of injections.  Duration is based on inter-prescription timing. 
+
+One-off users are those whose prescriptions fall within a single 30 day period.  Here, the the length of usage is estimated to be the number of doses.  Continuous users consume without a break, while episodic users consume in distinct episodes. An episode is ongoing if users have at least 0.25 doses / day.  Once we have no such recently successive prescription, we terminate the episode, and estimate the length of this purchase by assuming that they consume the final prescription at the same average DDD rate as they did for the other prescriptions in the episode.  Continuous users are those with only a single episode of duration longer than 30 days.
+
+
+<!---
+# looking at a single person, high user
+```{r single_high_user, echo=FALSE, cache=FALSE, results="hide"}
+get_continuing_df('continuing_rr') %>%
+  filter( pin == "34275325") %>%
+  arrange( pin, type_name, supply_date ) %>%
+  ungroup() %>%
+  group_by(pin, type_name, supply_date) 
+
+
+```
+-->
+
+```{r data_preparation, echo=FALSE, cache=FALSE, results="hide"}
+
+df <- get_continuing_df('continuing')
+# 
+# list all schemes
+df %>% 
+  select( pin, scheme ) %>%
+  unique() %>%
+  group_by(pin) %>% 
+  summarise( all_scheme=paste(sort(scheme), collapse=','))  %>%
+  {.} -> df_patient_scheme
+#
+# select out patients
+#
+df_patients <- df %>% 
+  select (pin, gender, age, state) %>% 
+  unique()  %>%
+  join( df_patient_scheme, by="pin") %>%
+  as.tibble()
+#
+# create main differences dataframe
+
+df%>%
+  group_by(pin,  type_name, supply_date) %>%
+  summarise( pill_days = sum(quantity * days_multiplier),
+        no_doses = sum(no_doses),
+        quantity = sum(quantity)) %>% 
+  group_by(pin, type_name) %>%
+  arrange( pin, type_name, supply_date ) %>%
+  mutate( difference = as.integer( lead(supply_date) - supply_date )
+         , instantaneous_rate = pill_days / difference   # pill_days is the standard expected time for this pill quantity
+         , ddd_per_day = no_doses / difference
+         ) %>%
+  mutate( episode = find_pill_group( supply_date, difference, pill_days, threshold = .25 )) %>%
+  group_by( pin, type_name, episode ) %>%
+  mutate(n_within = row_number() ) %>%  # the location within the episode
+      ungroup() %>%
+  {.} -> df_differences
+#
+# add in the per episode mean ddd_per_day to the last script
+df_differences %>%
+  group_by( pin, type_name, episode ) %>%
+  filter( row_number() != n() ) %>%
+  summarise( mean_ddd_day = mean( ddd_per_day )) %>%
+  {.} -> df_mean_ddd_day
+#
+# fill in the last item of an episode with the mean
+df_differences %<>%
+  left_join( df_mean_ddd_day, by=qw( "pin type_name episode") ) %>%
+  as.tibble() %>%
+  group_by( pin, type_name, episode ) %>%
+  mutate( using_days = ifelse( row_number() != n(), difference, round( no_doses / mean_ddd_day, 0 ) ))  %>%
+  mutate( using_days = ifelse( !is.na(difference) & (using_days > difference), difference, using_days) ) 
+#
+# add in the per drug_type mean ddd_per_day to all remaining ping / type_name
+df_differences %>%
+  group_by( pin, type_name ) %>%
+  filter( !is.na( mean_ddd_day )) %>%
+  summarise( mean_ddd_day = mean( mean_ddd_day)) %>%
+  {.} -> df_mean_ddd_day
+
+#
+df_differences %<>%
+  select( -mean_ddd_day ) %>%
+  left_join( df_mean_ddd_day, by=qw( "pin type_name") ) %>%
+  as.tibble() %>%
+  mutate( using_days = ifelse( is.na( using_days ), round( no_doses / mean_ddd_day, 0 ), using_days )) %>%
+  mutate( using_days = ifelse( !is.na(difference) & (using_days > difference), difference, using_days) ) %>%
+  select( -mean_ddd_day ) 
+#
+df_differences %<>% mutate( using_days = ifelse( is.na(using_days), pill_days, using_days))
+#
+#
+# divide people into types; one off, episodic, and continuious
+#
+df_differences %>%
+  group_by( pin, type_name ) %>%
+  summarize( 
+       using_days = sum(using_days ), 
+       no_doses = sum(no_doses), 
+       no_scripts = n(),
+       no_pills = sum(quantity),
+       no_episodes = max(episode),
+       rate = no_doses / using_days,
+       using_period = max( supply_date ) - min(supply_date) + 1
+       ) %>%
+  mutate ( usage_category = ifelse( (using_days < 30 & using_period <30),  "One-off", 
+                    ifelse( no_episodes == 1, "Continuous", "Episodic") )) %>%
+  {.} -> df_patient_type
+
+```
+<!---
+Todo;  usingdays / user facetted by drug type and user_type, and (gender|age|scheme0
+
+-->
+
+## distribution of the different types of drug overall, total count and percent
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  group_by( type_name) %>%
+  summarize( n_patients = n()) %>%
+  mutate( proportion = round(n_patients / sum(n_patients),4) * 100 ) %>%
+  kable()
+
+```
+
+# distribution of the different drug user types, total count and percent
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  group_by( usage_category) %>%
+  summarize( n_patients = n()) %>%
+  mutate( proportion = round(n_patients / sum(n_patients),4) * 100 ) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  filter(state %in% c("NSW", "VIC", "QLD")) %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("") 
+```
+
+# distribution of the different user types by drug type, in percent for each drug type
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %$%
+  table(.$usage_category, .$type_name) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  filter(state %in% c("NSW", "VIC", "QLD")) %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("User counts for each state, drug type and user category") +
+  facet_wrap(~type_name , scales="free") 
+```
+
+# distribution of the different user types by gender, in percent for each drug type
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %$%
+  table(.$usage_category, .$gender) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  filter(state %in% c("NSW", "VIC", "QLD")) %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("User counts for each state, drug type and user category") +
+  facet_wrap(~gender , scales="free") 
+
+```
+
+# distribution of the different user types by age_group, in percent for each drug type
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  mutate( age_group= age_grouping( age, 20 )) %>%
+  as.tibble()  %$%
+  table(.$usage_category, age_group) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  mutate( age_group= age_grouping( age, 20 )) %>%
+  filter(state %in% c("NSW", "VIC", "QLD")) %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("User counts for each state, drug type and user category") +
+  facet_wrap(~age_group , scales="free") 
+```
+
+# distribution of the different user types by payment scheme, in percent for each drug type
+# note, some people have more than one payment scheme
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %$%
+  table(.$usage_category, .$all_scheme) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  filter(state %in% c("NSW", "VIC", "QLD")) %>%
+  ggplot( ) + 
+  geom_bar( mapping=aes(x=state, fill=usage_category), stat="count" ) + 
+  ggtitle("User counts for each state, drug type and user category") +
+  facet_wrap(~all_scheme , scales="free") 
+```
+
+# distribution of the different user types by state, in percent for each drug type
+```{r, echo=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %$%
+  table(.$usage_category, .$state) %>%
+  prop.table( 2) %>% `*` (100) %>% round(2) %>%
+  kable()
+
+```
+
+# How many episodes does a person have?
+```{r episodes_per_person , echo=FALSE, cache=FALSE}
+df_differences %>%
+  group_by( pin, type_name) %>%
+  summarize( no_episodes = max(episode ) ) %>%
+  ggplot( aes( no_episodes )) + geom_histogram(bins=10) + ggtitle("episodes per person")
+```
+
+<!--
+# detail of a single multi episode Tramadol user
+```{r episodes_per_person_single , echo=FALSE, cache=FALSE}
+#df_differences %>%
+#  group_by( pin, type_name, episode) %>%
+#  summarize( no_episodes = max(episode ) ) %>%
+#  filter( no_episodes == 6 )
+
+df_differences %>%
+  filter( pin == "9568561825") %>%
+  filter( type_name=="Tramadol") %>%
+  select( supply_date, pill_days, no_doses, instantaneous_rate, ddd_per_day, using_days) %>%
+  arrange( pin, type_name, supply_date ) %>%
+  kable()
+```
+-->
+
+# Number of people with various total using days, log y axis
+```{r length_of_episode, echo=FALSE, cache=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  ggplot( aes( using_days, fill=usage_category )) + 
+  geom_histogram( bins=40) + 
+  scale_y_log10() +
+  ggtitle("Number of people in various total using days periods") 
+
+```
+
+<!--
+# excessive users: people who had more than one episode and had an episode with >100 scripts
+```{r excessive_users, echo=FALSE, cache=FALSE}
+df_differences %>% group_by( pin, type_name, episode ) %>% filter( n() > 1 ) %>%
+  summarize( ndays = max(supply_date ) - min(supply_date), n_scripts = max(n_within))  %>% 
+  filter( n_scripts > 100) 
+```
+-->
+
+<!--
+# the range of using_days and number of users for various combinations of variables
+```{r facet_by_age_state, echo=FALSE, cache=FALSE}
+df_patients  %>% 
+  join( df_patient_type, by=c("pin")) %>%
+  as.tibble()  %>%
+  filter( usage_category != "One-off") %>%
+  mutate( using_range = cut( using_days, 5 ) ) %>%
+  ggplot( aes( x=age_grouping( age, 20), fill=using_range)) + 
+  geom_bar( ) + 
+  ggtitle("length of total pill days vs # of users, for each drug type and age range") +
+  facet_grid(type_name ~ .,  scales="free") 
+             
+```
+-->
+
+<!--
+# characteristics of long episode users (> 5 prescriptions ) instantaneous_rate is drug taking instantaneous_rate, number of pills / day generally
+## ordered by increasing standard deviation of instantaneous_rate, that is, most stable consumers first
+```{r long_episodes, echo=FALSE, cache=FALSE}
+
+df_differences %>% 
+  group_by( pin, type_name, episode ) %>%
+  summarise( instantaneous_rate_sd = sd( instantaneous_rate )
+            , instantaneous_rate_mean = mean( instantaneous_rate )
+            , no_scripts=n()
+            , using_days = sum(using_days)
+            ) %>%
+  arrange((instantaneous_rate_sd)) %>%
+  filter( no_scripts > 5 ) 
+
+```
+-->
+
+<!--
+# what is the distribution of drug taking instantaneous_rates, for ongoing episodes
+```{r instantaneous_rates, echo=FALSE, cache=FALSE}
+df_differences %>% 
+  filter( instantaneous_rate < 10 ) %>%
+ ggplot(aes( instantaneous_rate , color=type_name, fill=type_name)) + geom_histogram(bins=100) 
+
+```
+-->
+
+

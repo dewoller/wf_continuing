@@ -1,0 +1,46 @@
+
+
+> rv = list()
+
+> for( i in c(1,2)) {
++   for( j in c(0,7 ) ) {
++     a= explore_overlap_barb_opioid( i,j,j)
++     rv[[length(rv)+1]] <- list( i,j, a)
++     print( pa .... [TRUNCATED]
+
+
+Experiment #  1
+
+ pills per day =  1
+days offset from ends =  0
+distinct opioid prescriptions: 1552711
+distinct benzo prescriptions: 933229
+distinct number of users with overlap: 112507
+
+
+Experiment #  2
+
+ pills per day =  1
+days offset from ends =  7
+distinct opioid prescriptions: 1275874
+distinct benzo prescriptions: 797432
+distinct number of users with overlap: 92276
+
+
+Experiment #  3
+
+ pills per day =  2
+days offset from ends =  0
+distinct opioid prescriptions: 1195153
+distinct benzo prescriptions: 795115
+distinct number of users with overlap: 99099
+
+
+Experiment #  4
+
+ pills per day =  2
+days offset from ends =  7
+distinct opioid prescriptions: 648345
+distinct benzo prescriptions: 453011
+distinct number of users with overlap: 56377
+>

@@ -1,0 +1,85 @@
+---
+title: "Hypothesis 1"
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-04-30"
+output: 
+  word_document:
+    reference_docx: ../../common/word_reference_style.docx
+---
+
+
+```{r set-options, echo=FALSE, cache=FALSE, warning=FALSE, results='hide'}
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+setwd("~/mydoc/research/mofi/continuing/R")
+source("functions.R")
+source("get_data.R")
+source("generate_data_frames.R")
+```
+#Methods
+
+```{r data_preparation, echo=FALSE, cache=FALSE, results="hide", warning=FALSE}
+
+data.cache( generate_data_frames, frequency='yearly')
+
+```
+
+# Methods
+Patients who were dispensed at least in 15 quarters were identified as regular users.
+Patients who were dispensed at least in 9 quarters were identified as long-term users.
+Patients who were dispensed 1-8 quarters were identified as short-term users.
+Patients who were dispensed just one occasion only were identified as one off users.
+
+#powerpoint slide 1
+```{r ppt_1, echo=FALSE}
+
+
+df_patient_dose %>%
+	inner_join( df_patient_usage ) %>%
+	inner_join( df_patient ) %>%
+	select( pin, usage_category, supply_year, age, sex, n_dose) %>% 
+	select_and_standardise_ddd( standardise_over=qw( "age supply_year usage_category" )) %>%
+	mutate( year_age  = paste( age,supply_year) ) %>%
+	select( -supply_year, -age ) %>%
+	mutate( ddd=round(ddd,2)) %>%
+	spread( year_age, ddd ) %>%
+	write.csv('/tmp/year_age_standardised.csv')
+
+	kable() %>% clipr::write_clip()
+
+
+	df_patient_dose %>%
+		inner_join( df_patient_usage ) %>%
+		inner_join( df_patient ) %>%
+		group_by( state, usage_category, supply_year) %>% 
+		summarise( n_dose = sum( n_dose ) )  %>%
+		join_population_grouped( qw("state supply_year")) %>% 
+		ungroup() %>%
+		mutate( ddd = (n_dose * 1000 * 10) / (person_days)) %>% 
+		mutate( year_state  = paste( state, supply_year) ) %>%
+		select( ddd, usage_category, year_state) %>%
+		mutate( ddd=round(ddd,2)) %>%
+		spread( year_state, ddd ) %>%
+		write.csv('/tmp/year_state_category_standardised.csv')
+
+		ungroup() %>%
+		print()
+
+
+df %>% 
+	mutate( state = ifelse( state=="VIC", "VIC", "NSW")) %>% 
+	group_by( supply_year, state ) %>% 
+	summarise( n_dose = sum(n_dose))  %>% 
+	write.csv( '/tmp/doses.csv')
+
+get_population_grouped(qw('state supply_year')) %>% 
+	ungroup() %>%
+	select(state, supply_year, population) %>%
+	mutate( state = ifelse( state=="VIC", "VIC", "NSW")) %>% 
+	group_by( supply_year, state ) %>% 
+	summarise( population = sum(population))  %>%
+	write.csv('/tmp/pop.csv')
+
+
+

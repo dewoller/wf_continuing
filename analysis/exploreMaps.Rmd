@@ -1,0 +1,109 @@
+
+```{r}
+
+rm(list=ls())
+setwd("~/mydoc/research/mofi/continuing/R")
+source("functions.R")
+state_id = 1
+df_population = get_population_df(c(1,2))
+
+area <- read_shape("~/mydoc/research/mofi/shapefiles/LGA11aAust.shp") 
+
+area %>% 
+  subset( STATE_CODE==1 )  %>% 
+  {.} -> nsw_area
+
+nsw_area %>% simplify_shape(0.1) %>%
+{.} -> nsw_simp
+
+nsw_simp %>% qtm()
+
+dfp = df_population %>% filter( supply_year==2014 ) %>%
+  group_by(lga ) %>% summarise( population=sum(population ))
+
+nsw_simp %>% append_data( dfp, key.shp="LGA_CODE11", key.data="lga")  -> nsw
+
+tm_shape( nsw ) + tm_bubbles(size="population")
+
+
+
+```
+
+
+arerea <- readShapePoly("~/mydoc/research/mofi/shapefiles/LGA11aAust.shp")      
+
+    colors <- brewer.pal(4, "BuGn")
+	area_extents <- get_state_geo_df(state_id)
+
+    area <- readShapePoly("~/mydoc/research/mofi/shapefiles/LGA11aAust.shp") 
+    tidy( area, region="LGA_CODE11") %>% 
+        as.tibble() %>%
+        rename( lga = id ) %>%
+        mutate( lga=factor(lga)) %>%
+        left_join( area@data,  by=c("lga"="LGA_CODE11")) %>%
+        inner_join( lga_colors, by="lga") %>%
+        mutate( lga=factor(lga)) %>%
+        {.} -> area.t
+
+area.t %>% 
+    rename( lga_name = LGA_NAME11) %>%
+	select(lga, lga_name ) %>%
+    unique() %>%
+    mutate( lga_name = substr(lga_name, 1, str_length(lga_name)-4))  %>%
+	mutate( lga_name = tools::toTitleCase( as.character(lga_name))) %>%
+	{.} -> lga_names
+
+area.t %>% 
+	group_by(lga ) %>%
+	summarize ( lat=mean(range(lat)), lon=mean(range(long))) %>%
+		{.} -> lga_center
+
+lga_names %<>% inner_join( lga_center, by=lga)
+
+
+
+		group_by( lga) %>%
+
+	lga
+
+ggplot() +
+    geom_polygon(aes(x = long,
+                     y = lat,
+                     group = group,
+                     fill=lga_color,
+                     color=lga_color
+    ),
+    color="black",
+    data = area.t
+    ) +
+    ## Configure the colors, transparency and panel
+    #	  scale_alpha(range = c(.25, .55)) +
+    geom_text(data=lga_names, aes(lon, lat, label = lga_name), size=1) +
+    coord_map( 
+        xlim=c( 154 + .1, area_extents$state_br_lon -.1 ) 
+        , ylim=c( area_extents$state_tl_lat + .1, area_extents$state_br_lat - .1 ) 
+    ) + 
+	theme_map() + 
+	scale_fill_manual(breaks=c("Moderate", "High", "Very High"), values=c("white","green", "orange", "red"))
+
+
+
+	ggplot() +
+	geom_polygon(aes(x = long,
+					y = lat,
+						group = group,
+						color= lga_color,
+						fill= lga_color 
+					),
+					color="white",
+				 data = area.t
+				 ) +
+	## Configure the colors, transparency and panel
+#	  scale_alpha(range = c(.25, .55)) +
+#	  geom_text(data=lga_names, aes(lon, lat, label = lga_name), size=1) +
+	   coord_map( 
+	   			 xlim=c( area_extents$state_tl_lon - .1, area_extents$state_br_lon +.1 ) 
+	   			 , ylim=c( area_extents$state_tl_lat - .1, area_extents$state_br_lat +.1 ) 
+	   			 )
+
+    
