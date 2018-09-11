@@ -39,7 +39,7 @@ df_mapdata  %>%
   rename( lga=LGA ) %>%
   mutate( lga = as.character( lga ) ) %>%
   filter( Desc == 'Years_Regular') %>% 
-  printMap( title = "Number Years\nRegular users\nin highest\nquartile DDD ",
+  printMap( title = "Number of years\nthe regular users\nwere in the\nhighest quartile",
                                                 filename = '/tmp/regular.png' )
 
 #
@@ -47,24 +47,36 @@ df_mapdata  %>%
   rename( lga=LGA ) %>%
   mutate( lga = as.character( lga ) ) %>%
   filter( Desc == 'Years_fourth_quartile') %>% 
-  printMap( title = "Years\ntotal qty in\nfourth quartile",
+  printMap( title = "Number of years\nthe total quantity\ndispensed were in\nthe fourth quartile",
            filename = '/tmp/fourthQuartile.png' )
 
 
 debug( printMap)
 
+df_mapdata  %>%
+  rename( lga=LGA ) %>%
+  mutate( lga = as.character( lga ) ) %>%
+  filter( Desc == 'Years_fourth_quartile') %>% 
+  { . } -> df
+
+title=""
+filename="/tmp/a.png"
+ 
 printMap = function( df, title, filename )  {
 
+  pic_width=1500*2
+  pic_height=1100*2
 
-  vp_sydney=viewport(x= .55, y= .5, width= 0.2, height= 0.2)
-  vp_melbourne=viewport(x= 0.24, y= 0.15, width= 0.2, height= 0.2)
-  vp_legend=viewport(x= 0.75, y= 0.82, width= 0.3, height= 0.3)
+  cc_box_width=0.15
+  vp_sydney=viewport(x= .50, y= .52, width= cc_box_width, height= cc_box_width)
+  vp_melbourne=viewport(x= 0.18, y= 0.18, width= cc_box_width, height= cc_box_width)
+  vp_legend=viewport(x= 0.7, y= 0.82, width= 0.3, height= 0.3)
   bbox_oz = c( 140.9617 , -39.15839 , 159.1054 , -28.15702 )
 
   right_join( df, df_population %>% distinct( lga ) ) %>%
-      mutate( value = ifelse( is.na(Value), NA, Value )) %>%
+      mutate( value = ifelse( is.na(Value), 0, Value )) %>%
       select( lga, value ) %>%
-      rbind( data.frame( lga=c(89399), value=NA)) %>%
+      rbind( data.frame( lga=c(89399), value=0)) %>%
       mutate( value=as.ordered(value)) %>% 
       select( lga, value ) %>%
       append_data( base_map, 
@@ -81,10 +93,12 @@ printMap = function( df, title, filename )  {
                 showNA=FALSE,
                 colorNA='#FFFFFF'
                 ) +
-  tm_layout(frame=FALSE,
-            legend.position = c("right", "top"), bg.color="lightgreen",
-            inner.margins = c(.25,.02,.02,.25),  # how far in from the bottom and right side (for insets)
-            legend.show=FALSE) %>%
+    tm_layout(frame=FALSE,
+              legend.position = c("right", "top"), bg.color="#FFFFFF",
+              inner.margins = c(.25,.02,.02,.25),  # how far in from the bottom and right side (for insets)
+              legend.show=FALSE) +
+    tm_shape( capital_city_box(1)) + tm_borders(col="red")+
+    tm_shape( capital_city_box(2)) + tm_borders(col="red") %>%
   {.} -> map
 
   print(map)
@@ -97,7 +111,7 @@ printMap = function( df, title, filename )  {
                 colorNA='#FFFFFF'
                 ) +
   tm_layout(frame=FALSE,
-            bg.color="lightgreen",
+            bg.color="#FFFFFF",
             legend.only=TRUE) %>%
     { . } -> m_legend
 
@@ -110,8 +124,8 @@ printMap = function( df, title, filename )  {
                 showNA=FALSE,
                 colorNA='#FFFFFF',
                 legend.show=FALSE) +
-    tm_layout(frame=FALSE, 
-              bg.color="lightgreen"
+    tm_layout(frame="red", 
+              bg.color="#FFFFFF"
               )  %>%
     {.} -> m_melbourne
 
@@ -122,22 +136,26 @@ printMap = function( df, title, filename )  {
       showNA=FALSE,
       colorNA='#FFFFFF',
       legend.show=FALSE) +
-    tm_layout(frame=FALSE, bg.color="lightgreen")  %>%
+    tm_layout(frame="red", bg.color="#FFFFFF")  %>%
     {.} -> m_sydney
 
   # print insets
   print(m_sydney, vp=vp_sydney)
   print(m_melbourne, vp=vp_melbourne)
-  save_tmap( map, 
+  tmap_save( map, 
             insets_vp = list( vp_sydney, vp_melbourne, vp_legend ),
             insets_tm = list( m_sydney, m_melbourne, m_legend ),
             filename=filename, 
-             width=1100, height=1080, asp=0
+             width=pic_width, height=pic_height, asp=0
             ) 
 }
 
+state_id=1
 
-    
-
-```
+capital_city_box = function( state_id ) {
+  coords = c( get_state_capital_xlim( state_id ), get_state_capital_ylim( state_id ))
+  e <- as(raster::extent(coords), "SpatialPolygons")
+  proj4string(e) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+  e
+}
 
