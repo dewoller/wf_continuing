@@ -12,6 +12,7 @@ output:
 
 ```{r set-options, echo=FALSE, cache=FALSE, warning=FALSE, results='hide'}
 rm(list=ls())
+library(workflowr)
 options(width = 200)
 show_code = FALSE
 source("lib/functions.R")
@@ -19,7 +20,7 @@ source("lib/standardisation.R")
 source("lib/get_data.R")
 source("lib/generate_data_frames.R")
 
-df_mapdata = read.csv('data/Data2MapFromMofi.csv') %>% as.tibble()
+#df_mapdata = read.csv('data/Data2MapFromMofi.csv') %>% as.tibble()
 
 ```
 #Methods
@@ -28,41 +29,15 @@ df_mapdata = read.csv('data/Data2MapFromMofi.csv') %>% as.tibble()
 
 data.cache( generate_data_frames, frequency='yearly')
 
-```
 
-maps 
+printMap = function( df_map, title, filename )  {
 
-```{r}
+  map_color_set_1= RColorBrewer::brewer.pal(6, "Oranges")[2:6]
+  map_color_set_2= RColorBrewer::brewer.pal(6, "Blues")[2:6] 
 
+  map_color_set_2= c(RColorBrewer::brewer.pal(5, "PuBuGn") )
+  map_color_set_1= c(RColorBrewer::brewer.pal(5, "YlOrRd") )
 
-df_mapdata  %>%
-  rename( lga=LGA ) %>%
-  mutate( lga = as.character( lga ) ) %>%
-  filter( Desc == 'Years_Regular') %>% 
-  printMap( title = "Number of years\nthe regular users\nwere in the\nhighest quartile",
-                                                filename = '/tmp/regular.png' )
-
-#
-df_mapdata  %>%
-  rename( lga=LGA ) %>%
-  mutate( lga = as.character( lga ) ) %>%
-  filter( Desc == 'Years_fourth_quartile') %>% 
-  printMap( title = "Number of years\nthe total quantity\ndispensed were in\nthe fourth quartile",
-           filename = '/tmp/fourthQuartile.png' )
-
-
-debug( printMap)
-
-df_mapdata  %>%
-  rename( lga=LGA ) %>%
-  mutate( lga = as.character( lga ) ) %>%
-  filter( Desc == 'Years_fourth_quartile') %>% 
-  { . } -> df
-
-title=""
-filename="/tmp/a.png"
- 
-printMap = function( df, title, filename )  {
 
   pic_width=1500*2
   pic_height=1100*2
@@ -70,26 +45,27 @@ printMap = function( df, title, filename )  {
   cc_box_width=0.15
   vp_sydney=viewport(x= .50, y= .52, width= cc_box_width, height= cc_box_width)
   vp_melbourne=viewport(x= 0.18, y= 0.18, width= cc_box_width, height= cc_box_width)
-  vp_legend=viewport(x= 0.7, y= 0.82, width= 0.3, height= 0.3)
+  vp_legend=viewport(x= 0.58, y= 0.2, width= 0.3, height= 0.3)
   bbox_oz = c( 140.9617 , -39.15839 , 159.1054 , -28.15702 )
 
-  right_join( df, df_population %>% distinct( lga ) ) %>%
-      mutate( value = ifelse( is.na(Value), 0, Value )) %>%
-      select( lga, value ) %>%
-      rbind( data.frame( lga=c(89399), value=0)) %>%
-      mutate( value=as.ordered(value)) %>% 
-      select( lga, value ) %>%
-      append_data( base_map, 
-                  ., 
-                  key.shp="LGA_CODE11", 
-                  key.data="lga" 
-                  )  %>%
-      {.} -> df
+  right_join( df_map, df_population %>% distinct( lga ) ) %>%
+    mutate( value = ifelse( is.na(Value), 0, Value )) %>%
+    select( lga, value ) %>%
+    rbind( data.frame( lga=c(89399), value=0)) %>%
+    mutate( value=as.ordered(value)) %>% 
+    select( lga, value ) %>%
+    append_data( base_map, 
+                ., 
+                key.shp="LGA_CODE11", 
+                key.data="lga" 
+                )  %>%
+    {.} -> df_map
 
-  df %>%
+  df_map %>%
     tm_shape( ) + 
     tm_polygons( "value", 
                 title = title,
+                palette = map_color_set_1 ,
                 showNA=FALSE,
                 colorNA='#FFFFFF'
                 ) +
@@ -99,58 +75,63 @@ printMap = function( df, title, filename )  {
               legend.show=FALSE) +
     tm_shape( capital_city_box(1)) + tm_borders(col="red")+
     tm_shape( capital_city_box(2)) + tm_borders(col="red") %>%
-  {.} -> map
+    {.} -> map
 
   print(map)
 
-  df %>%
-    tm_shape( ) + 
-    tm_polygons( "value", 
-                title = title,
-                showNA=FALSE,
-                colorNA='#FFFFFF'
-                ) +
-  tm_layout(frame=FALSE,
-            bg.color="#FFFFFF",
-            legend.only=TRUE) %>%
-    { . } -> m_legend
+df_map %>%
+  tm_shape( ) + 
+  tm_polygons( "value", 
+              title = title,
+              palette = map_color_set_1 ,
+              showNA=FALSE,
+              colorNA='#FFFFFF'
+              ) +
+tm_layout(frame=FALSE,
+          bg.color="#FFFFFF",
+          legend.only=TRUE) %>%
+{ . } -> m_legend
 
   print(m_legend, vp=vp_legend)
 
-  df %>%
-    tm_shape( xlim=get_state_capital_xlim(2),
-              ylim=get_state_capital_ylim(2) ) +
-    tm_polygons( "value", 
-                showNA=FALSE,
-                colorNA='#FFFFFF',
-                legend.show=FALSE) +
-    tm_layout(frame="red", 
-              bg.color="#FFFFFF"
-              )  %>%
-    {.} -> m_melbourne
+df_map %>%
+  tm_shape( xlim=get_state_capital_xlim(2),
+           ylim=get_state_capital_ylim(2) ) +
+tm_polygons( "value", 
+            palette = map_color_set_1 ,
+            showNA=FALSE,
+            colorNA='#FFFFFF',
+            legend.show=FALSE) +
+tm_layout(frame="red", 
+          bg.color="#FFFFFF"
+          )  %>%
+{.} -> m_melbourne
 
-  df %>% 
+  df_map %>% 
     tm_shape( xlim=get_state_capital_xlim(1),
-              ylim=get_state_capital_ylim(1) ) +
-    tm_polygons( "value", 
-      showNA=FALSE,
-      colorNA='#FFFFFF',
-      legend.show=FALSE) +
-    tm_layout(frame="red", bg.color="#FFFFFF")  %>%
-    {.} -> m_sydney
+             ylim=get_state_capital_ylim(1) ) +
+tm_polygons( "value", 
+            palette = map_color_set_1 ,
+            showNA=FALSE,
+            colorNA='#FFFFFF',
+            legend.show=FALSE) +
+tm_layout(frame="red", bg.color="#FFFFFF")  %>%
+{.} -> m_sydney
 
   # print insets
   print(m_sydney, vp=vp_sydney)
-  print(m_melbourne, vp=vp_melbourne)
-  tmap_save( map, 
-            insets_vp = list( vp_sydney, vp_melbourne, vp_legend ),
-            insets_tm = list( m_sydney, m_melbourne, m_legend ),
-            filename=filename, 
-             width=pic_width, height=pic_height, asp=0
-            ) 
+print(m_melbourne, vp=vp_melbourne)
+tmap_save( map, 
+          insets_vp = list( vp_sydney, vp_melbourne, vp_legend ),
+          insets_tm = list( m_sydney, m_melbourne, m_legend ),
+          filename=filename, 
+          width=pic_width, height=pic_height, asp=0
+          ) 
 }
 
-state_id=1
+
+require(sp)
+#require(rgdal)
 
 capital_city_box = function( state_id ) {
   coords = c( get_state_capital_xlim( state_id ), get_state_capital_ylim( state_id ))
@@ -158,4 +139,348 @@ capital_city_box = function( state_id ) {
   proj4string(e) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
   e
 }
+
+
+```
+
+maps  - now need to generate mapdata
+
+lgas in 4th quartile of dispensing - Figure 3
+
+
+```{r}
+
+df %>%
+  count( type_name, ddd_mg_factor ) 
+
+
+df_population %>%
+  distinct( lga )
+
+df_population %>%
+  group_by(supply_year, state) %>%
+  summarise( sum( population ))
+
+df %>%
+  select_and_standardise_ddd (  standardise_over=qw('lga supply_year')  ) %>%
+  group_by( supply_year ) %>%
+  mutate( quartile = cut( ddd, quantile( ddd), labels=1:4 ) )%>%
+  ungroup() %>%
+  filter( quartile=='4') %>%
+  count( lga ) %>% 
+  { . } -> df_lgas_in_fourth_quartile
+
+df_lgas_in_fourth_quartile %>%
+   count( n ) %>%
+   rename( years_in_fourth_quartile = n, count_lga = nn)
+
+
+ df_population %>%
+   distinct( lga,state) %>%
+   inner_join( df_lgas_in_fourth_quartile ) %>%
+   count( state)
+
+```
+lgas in 4th quartile of dispensing  for chronic users - Figure 4
+
+```{r}
+
+df %>%
+  inner_join( df_patient_usage ) %>%
+  filter( usage_category =='chronic') %>%
+  select_and_standardise_ddd (  standardise_over=qw('lga supply_year')  ) %>%
+  group_by( supply_year ) %>%
+  mutate( quartile = cut( ddd, quantile( ddd), labels=1:4 ) )%>%
+  ungroup() %>%
+  filter( quartile=='4') %>%
+  count( lga ) %>% 
+  { . } -> df_chronic_lgas_in_fourth_quartile
+
+df_chronic_lgas_in_fourth_quartile %>%
+  count( n ) %>%
+  rename( years_in_fourth_quartile = n, count_lga = nn)
+
+
+df_population %>%
+  distinct( lga,state) %>%
+  inner_join( df_chronic_lgas_in_fourth_quartile ) %>%
+  count( state)
+
+```
+
+```{r}
+
+library( jsonlite)
+library(sf)
+df_hospital = fromJSON('https://www.myhospitals.gov.au/api/hospitals')  %>%
+  as.tibble()
+
+df_hospital %>%
+  filter( str_to_upper( state ) %in% c('NSW','VIC') &
+         !isClosed ) %>% 
+  mutate( latitude = as.numeric( latitude), longitude = as.numeric( longitude)) %>%
+  { . } -> df_hospital
+
+df_hospital_sf = st_as_sf(df_hospital, coords = c("longitude", "latitude"), 
+                 crs = 4326, agr = "constant")
+
+df_chronic_lgas_in_fourth_quartile  %>%
+  inner_join( df_population %>% distinct( lga, urbanization )) %>%
+  mutate( value = ifelse( is.na(n), 0, n )) %>%
+  select( lga, value, urbanization ) %>%
+  rbind( data.frame( lga=c(89399), value=0, urbanization='Urban')) %>%
+  mutate( value=as.ordered(value)) %>% 
+  select( lga, value, urbanization ) %>%
+  append_data( base_map, 
+              ., 
+              key.shp="LGA_CODE11", 
+              key.data="lga" 
+              )  %>%
+  {.} -> df_map
+
+map_color_set_1= RColorBrewer::brewer.pal(6, "Oranges")[2:6]
+map_color_set_2= RColorBrewer::brewer.pal(6, "Blues")[2:6] 
+
+
+df_map %>% 
+  mutate( value=as.numeric( value), 
+         value = as.ordered( ifelse( urbanization == 'Urban', value+5,value))) %>%
+  tm_shape( ) + 
+  tm_polygons( "value", 
+              palette = c( map_color_set_1 , map_color_set_2),
+              showNA=FALSE,
+              colorNA='#FFFFFF'
+              ) +
+tm_layout(frame=FALSE,
+          legend.position = c("right", "top"), bg.color="#FFFFFF",
+          inner.margins = c(.25,.02,.02,.25),  # how far in from the bottom and right side (for insets)
+          legend.show=FALSE) +
+tm_shape( df_hospital_sf ) + 
+tm_symbols(col = "black", size = .001, shape=4) 
+
+
+
+df_population %>% 
+  distinct( lga, urbanization ) %>%
+  append_data( base_map, 
+              ., 
+              key.shp="LGA_CODE11", 
+              key.data="lga" 
+              )  %>%
+  tm_shape( ) + 
+  tm_polygons( "urbanization", 
+              ) +
+tm_layout(frame=FALSE,
+          legend.position = c("right", "top"), bg.color="#FFFFFF",
+          inner.margins = c(.25,.02,.02,.25)  )
+
+
+
+df_lgas_in_fourth_quartile %>%
+  rename( Value = n ) %>%
+  printMap( title = "Number of years\nthe regular users\nwere in the\nhighest quartile",
+                                                filename = '/tmp/regular.png' )
+
+  df_chronic_lgas_in_fourth_quartile %>%
+  rename( Value = n ) %>%
+  printMap( title = "Number of years\nthe total quantity\ndispensed to \n chronic users were in\nthe fourth quartile",
+           filename = '/tmp/fourthQuartile.png' )
+
+
+
+```
+
+#Results for the paper
+
+% for each usage category
+
+```{r}
+
+df_patient_usage %>%
+  count( usage_category ) %>%
+  mutate( pct = round( n/sum(n) * 100,2 )) %>% 
+  kable()
+
+```
+
+```{r}
+
+
+df_patient %>%
+  count( sex ) %>%
+  mutate( pct = round( n/sum(n) * 100,2 )) %>% 
+  kable()
+
+
+```
+drug type by number of people and drug type 
+```{r}
+
+df %>%
+  distinct( type_name, pin ) %>%
+  count( type_name ) %>%
+  mutate( pct = round( n/sum(n) * 100,2 )) %>% 
+  kable()
+
+
+df %>%
+  select_and_standardise_ddd (  standardise_over=qw('state type_name') , join_with=qw('supply_year') ) %>%
+  count( type_name ) %>%
+  mutate( pct = round( n/sum(n) * 100,2 )) %>% 
+  kable()
+```
+
+DDD/1000 by drug type standardised
+```{r}
+
+
+df %>%
+  select_and_standardise_ddd (  standardise_over=qw('state type_name') , join_with=qw('supply_year') ) %>%
+  filter( supply_year == '2016') %>%
+  select(  -supply_year) %>%
+  spread( state, ddd)  %>% 
+  kable()
+
+
+```
+mean doses by cateogry
+```{r}
+
+df %>%
+  inner_join( df_patient_usage ) %>%
+  group_by( usage_category ) %>%
+  summarise( round( mean( n_dose ), 1 ))  %>% 
+  kable()
+
+
+```
+mean doses by seifa
+```{r}
+
+df %>%
+  inner_join( df_population %>% distinct( lga, seifa )) %>%
+  group_by( seifa ) %>%
+  summarise( n_dose = round( mean( n_dose ),1) ) %>% 
+  kable()
+
+
+```
+
+#IRR content - TODO
+
+Avg ddd / lga ; and bootstrapped confidence intervals
+
+
+```{r}
+library(rcompanion)
+df %>%
+  select_and_standardise_ddd (  standardise_over=qw('lga')  ) %>%
+  ggplot( aes( ddd, group=1) ) + geom_histogram(bins=60)
+
+df %>%
+  select_and_standardise_ddd (  standardise_over=qw('lga')  ) %>%
+  groupwiseGeometric( ddd ~ 1, ., conf   = 0.95,
+                digits = 6,
+                R      = 10000,
+                boot        = TRUE,
+                traditional = FALSE,
+                normal      = FALSE,
+                basic       = FALSE,
+                percentile  = FALSE,
+                bca         = TRUE )
+
+df %>%
+  select_and_standardise_ddd (  standardise_over=qw('lga')  ) %$%
+  t.test( ddd )
+
+df %>%
+  select_and_standardise_ddd (  standardise_over=qw('lga')  ) %>%
+  summarise( se = sd( ddd ) / sqrt( length(ddd)))
+
+df %>%
+  select_and_standardise_ddd (  standardise_over=qw('lga')  ) %>%
+  summarise( mean( ddd ), max(ddd), min(ddd))
+
+```
+
+
+
+## Table 2 - Mixed effects model
+```{r}
+
+library(haven)
+
+library(lme4)
+
+df_population %>%
+  distinct( lga, seifa, urbanization ) %>% 
+  { . } -> df_lga
+
+df %>%
+  distinct( pin, quarter, supply_year) %>%
+  count( pin, supply_year  ) %>%
+  inner_join( df_patient ) %>% 
+  inner_join( df_lga ) %>%
+  mutate( supply_year = as.ordered( supply_year )) %>%
+  glmer( n~ sex+age+supply_year+seifa+urbanization + (1|state/lga), data=.) %>% 
+  { . } -> model
+
+summary(model)
+```
+
+
+
+
+
+## FIgure 2
+mean doses by # quarters using
+```{r}
+
+
+
+df%>%
+  inner_join( df_patient_usage ) %>%
+  group_by( usage_category, supply_year ) %>%
+  summarise( n_dose = round( mean( n_dose ),1) ) %>% 
+  ggplot( aes( x=supply_year, y=n_dose, fill=usage_category  ) )+
+  geom_col( position='dodge') +
+  ylab( "Total quantity (in DDD unit) per prescription" ) + 
+  xlab('')
+
+
+
+```
+
+##Table 1
+ddd / year (standardised) for each year by user_type
+```{r}
+
+df %>%
+  inner_join( df_patient_usage ) %>%
+  select_and_standardise_ddd (  standardise_over=qw('state usage_category supply_year') , join_with=qw('supply_year') ) %>%
+  mutate( ddd = round(ddd, 2 ), u_s = paste( usage_category, state)) %>% 
+  select(-state, -usage_category) %>%
+  group_by( u_s, supply_year ) %>%
+  summarise( ddd=sum(ddd))  %>%
+  spread( u_s, ddd)  %>% 
+  kable()
+
+df %>%
+  inner_join( df_patient_usage ) %>%
+  select_and_standardise_ddd (  standardise_over=qw('state usage_category') , join_with=qw('supply_year') ) %>%
+  mutate( ddd = round(ddd, 2 ), u_s = paste( usage_category, state)) %>% 
+  select(-state, -usage_category) %>%
+  group_by( u_s ) %>%
+  summarise( ddd=sum(ddd))  %>%
+  spread( u_s, ddd)  %>% 
+  kable()
+
+df %>%
+  inner_join( df_patient_usage ) %>%
+  select_and_standardise_ddd (  standardise_over=qw('state') , join_with=qw('supply_year') ) %>%
+  mutate( ddd = round(ddd, 2 )) %>% 
+  spread( state, ddd)  %>% 
+  kable()
+
+```
 

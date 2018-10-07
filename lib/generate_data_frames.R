@@ -13,6 +13,10 @@ generate_data_frames = function( ) {
                         class = "factor")
 
 
+#  read.dta13('data/nsw_vic_populato_and_seifa_data.dta') %>% 
+#    tbl_df() %>% 
+#    { . } -> a
+
 read.dta13('data/nsw_vic_populato_and_seifa_data.dta') %>% 
     tbl_df() %>%
     rename( lga_name = lga, 
@@ -77,10 +81,9 @@ read.dta13('data/nsw_vic_populato_and_seifa_data.dta') %>%
       summarise( 
                 n_quarter = n_distinct( quarter ),
                 usage_category= cut( n_quarter, 
-                                    c(-1, 1,7,13, 999999), 
-                                    labels = qw("one-off short-term long-term regular"),
+                                    c(-1, 1,6,11, 18), 
+                                    labels = qw("one-off medium-episodic long-episodic chronic")),
                                     ordered_result=TRUE
-                                    ) 
                 ) %>%
       {.} -> df_patient_usage
 

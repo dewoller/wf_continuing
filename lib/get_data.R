@@ -3,7 +3,8 @@ safe_load("keyring")
 
 # -------------------------------------------------
 get_continuing_df <- function( 
-                              base_table="continuing_rr", 
+                              base_table="continuing_rr"
+                              , 
                               include_barb=FALSE
                               ) {
 
@@ -16,19 +17,23 @@ get_continuing_df <- function(
     where (type_code < ", type_code_limit, "  
     AND EXTRACT( YEAR FROM supply_date ) != '2017'
     AND state in ('NSW', 'VIC')
-    AND (lga like '1%' OR lga like '2%'))"
+    AND (lga like '1%' OR lga like '2%' OR lga is null OR lga='.')
+    )"
       )
 
   my_db_get_query( query ) %>%
     as.tibble() %>%
     mutate( n_dose = (unit_wt * quantity / ddd_mg_factor ),
            agen=ifelse( age=='100+', 101, as.numeric( age )),
+           lga = ifelse( lga!='.', lga, 
+                        ifelse( state=='VIC', '2_NA', '1_NA')),
            age = cut( agen, 
                            c(0,19,44,64,9999), 
                            labels=qw("0-19 20-44 45-64 65+")
                            )
            ) %>%
     rename(sex=gender) 
+
 }
 
 # -------------------------------------------------
@@ -111,7 +116,6 @@ get_population_df<- function ( state_id = 0 ) {
 
   df_population <- my_db_get_query( query ) %>%
     left_join( df_seifa, by = "lga") %>%
-    mutate( state = get_state_code_from_lga( lga ) ) %>%
     mutate( state = get_state_code_from_lga( lga ) ) %>%
     mutate_at( qw( "supply_year lga age sex state"), funs( factor(.) ) ) %>%
     ungroup() %>%

@@ -389,8 +389,17 @@ seqNext <- function(x1, y1) {
 
 # bothDiff  ------------------------------------------------------------------
 bothDiff <- function ( set1, set2 ) {
-	print(setdiff( set1, set2 ))
-	print(setdiff(set2, set1))
+
+  print("first - second")
+  set1 %>%
+    anti_join( set2 ) %>%
+    print()
+
+  print("second - first")
+  set2 %>%
+    anti_join( set1 ) %>%
+    print()
+
 }
 
 # ------------------------------------------------------------------

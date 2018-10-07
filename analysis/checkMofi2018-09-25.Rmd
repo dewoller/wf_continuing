@@ -1,0 +1,178 @@
+---
+title: "Continuing users - Check Mofis data 2018-09 "
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-09-30"
+output: 
+  word_document:
+    reference_docx: word_reference_style.docx
+---
+
+```{r results='hide', message=FALSE, warning=FALSE}
+
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+getwd()
+source("lib/functions.R")
+source("lib/standardisation.R")
+source("lib/get_data.R")
+source("lib/generate_data_frames.R")
+```
+#Check Mofis data 2018-09
+
+```{r results='hide', message=FALSE, warning=FALSE}
+
+data.cache( generate_data_frames )
+
+```
+
+##count_by_quarters
+```{r count_by_quarters, echo=FALSE}
+
+df_patient_usage %>%
+  count(n_quarter) %>%
+  mutate( pct = round( n/sum(n) * 100, 2 )) %>%
+  kable()
+
+df_patient_usage %>%
+  count(n_quarter) %>%
+  mutate( pct = round( n/sum(n) * 100, 2 )) %>%
+  ggplot( aes( n_quarter, pct )) +
+  geom_line() +
+  geom_point()
+
+
+```
+
+##Overall_combined
+
+### Number of users by age and usertype, percentage of usertype 
+```{r Overall_combined_usertype, echo=FALSE}
+
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  count( usage_category, age ) %>%
+  group_by( usage_category ) %>%
+  mutate( pct = round( n / sum(n) * 100, 2 )) %>%
+  select( -n ) %>%
+  spread( age, pct ) %>%
+  kable()
+```
+
+### Number of users by age and usertype, percentage of age
+```{r Overall_combined_pct_age, echo=FALSE}
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  count( usage_category, age ) %>%
+  group_by( age ) %>%
+  mutate( pct = round( n / sum(n) * 100, 2 )) %>%
+  select( -n ) %>%
+  spread( age, pct ) %>%
+  kable()
+
+```
+
+### Number of users by age and usertype and state, percentage of age
+```{r Overall_combined_state, echo=FALSE}
+
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  count( usage_category, age, state ) %>%
+  group_by( state, usage_category  ) %>%
+  mutate( pct = round( n / sum(n) * 100, 2 )) %>%
+  select( -n ) %>%
+  spread( age, pct ) %>%
+  arrange( state ) %>%
+  kable()
+
+
+```
+
+### ddd_by_year_and_state 
+
+```{r ddd_by_year_and_state, echo=FALSE}
+
+
+
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  inner_join( df_patient_dose ) %>%
+  select_and_standardise_ddd ( qw('usage_category supply_year state'), join_with=qw('supply_year') ) %>%
+  spread( usage_category, ddd ) %>%
+  arrange( state ) %>%
+  kable()
+
+```
+
+### ddd_by_drug_type
+
+```{r ddd_by_drug_type, echo=FALSE}
+
+
+df %>%
+  mutate( supply_year = as.character( year( supply_date )),
+         n_dose = quantity * unit_wt / ddd_mg_factor) %>%
+  group_by( pin, type_name, supply_year ) %>%
+  summarise( n_dose = sum(n_dose ), 
+            quantity = sum(quantity),
+            n_script=n() ) %>%
+  inner_join( df_patient ) %>%
+  inner_join( df_patient_usage ) %>% 
+  select_and_standardise_ddd (  standardise_over=qw('type_name usage_category state') , join_with=qw('supply_year') ) %>%
+  filter( supply_year=='2016') %>%
+  spread( usage_category, ddd ) %>%
+  arrange( state ) %>%
+  kable()
+
+```
+
+### ddd_by_year and age group
+
+```{r ddd_by_year_and_age_group, echo=FALSE}
+
+
+df %>%
+  mutate( supply_year = as.character( year( supply_date )),
+          n_dose = quantity * unit_wt / ddd_mg_factor) %>%
+  group_by( pin, type_name, supply_year ) %>%
+  summarise( n_dose = sum(n_dose ), 
+            quantity = sum(quantity),
+            n_script=n() ) %>%
+  inner_join( df_patient ) %>%
+  inner_join( df_patient_usage ) %>% 
+  select_and_standardise_ddd (  standardise_over=qw('age usage_category') , join_with=qw('supply_year') ) %>%
+  mutate( year_age = paste(supply_year, age) ) %>%
+  select( -supply_year, -age ) %>%
+  spread( year_age, ddd ) %>%
+  kable()
+
+```
+
+
+### dose_event by year and number of quarters
+
+```{r_dose_event_by_year_and_number_of_quarters, echo=FALSE}
+
+
+seifa 
+df %>%
+  mutate( supply_year = as.character( year( supply_date )), n_dose = quantity * unit_wt / ddd_mg_factor) %>%
+  group_by( pin, supply_year ) %>%
+  summarise( n_dose = mean(n_dose ) ) %>%
+  inner_join( df_patient_usage ) %>% 
+  group_by( n_quarter, supply_year ) %>%
+  summarise( n_dose = mean( n_dose )) %>% 
+  { . } -> df_year_temp
+
+df_year_temp %>%
+  spread( supply_year, n_dose) %>%
+  kable()
+
+df_year_temp %>%
+  ggplot( aes( x=n_quarter, y=n_dose, group=supply_year, color=supply_year )) + geom_line() + geom_point()
+
+
+```
+
+
+

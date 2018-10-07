@@ -1,0 +1,121 @@
+---
+title: "Continuing users - Check Mofis detailed data 2018-09 "
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-09-30"
+output: 
+  word_document:
+    reference_docx: word_reference_style.docx
+---
+```{r}
+
+getwd()
+```
+
+
+```{r results='hide', message=FALSE, warning=FALSE}
+
+
+
+
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+getwd()
+source("lib/functions.R")
+source("lib/standardisation.R")
+source("lib/get_data.R")
+source("lib/generate_data_frames.R")
+```
+#Check Mofis data 2018-09
+
+```{r results='hide', message=FALSE, warning=FALSE}
+
+
+data.cache( generate_data_frames )
+
+read.dta13('/mnt/sda5/store/aarnet_owncloud/Sharing_between_mofi_and_dennis/Opioid/Opioid/Continuing users for Dennis to check.dta') %>% 
+  as.tibble() %>% 
+  { . } -> df_mofi
+
+df_mofi %>%
+  select(-lga) %>%
+  rename( lga=lgacode,
+         pin=ID, 
+         sex=sex2,
+         quantity=qty,
+         quarter=dup,
+         supply_date=DateSupply,
+         unit_wt = Unit_wt,
+         ddd_mg_factor = DDD,
+         item_code = Item_code 
+         )  %>%
+  mutate( state=str_trim( state ),
+         age = age_grouping_mofi( age),
+         lga = as.character( lga ) ,
+         item_code = str_trim(item_code ), 
+         n_dose=quantity * unit_wt / ddd_mg_factor ,
+         supply_year=as.factor(substring( supply_date,6,9 ))
+         )  %>% 
+  filter( !is.na( quantity )) %>% 
+  { . } -> df_mofi
+
+df_mofi %>% 
+  filter( item_code != '91194Q') %>% 
+  { . } -> df_mofi
+
+df_mofi %>% 
+  filter( state != 'ACT') %>% 
+  { . } -> df_mofi
+
+unit_wt=ifelse( item_code=='02124T', 2000, unit_wt),
+ddd_mg_factor=ifelse( item_code=='08423H', 4, ddd_mg_factor),
+
+df %>% distinct( lga )
+df_mofi %>% distinct( lga )
+
+
+bothDiff(  df %>% select( pin ), df_mofi %>% select(pin))
+
+bothDiff(  df %>% count( pin ), df_mofi %>% count(pin))
+
+bothDiff(  df %>% select( item_code ), df_mofi %>% select(item_code))
+
+bothDiff(  df %>% summarise( sum(quantity) ), df_mofi %>% summarise(sum(quantity)))
+
+bothDiff(  df %>% summarise( sum(unit_wt) ), df_mofi %>% summarise(sum(unit_wt)))
+
+bothDiff(  df %>% summarise( sum(n_dose) ), df_mofi %>% summarise(sum(n_dose)))
+
+df %>% 
+  group_by( pin ) %>% 
+ summarise( x=sum(n_dose) ) %>%
+ inner_join(  df_mofi %>% 
+            group_by( pin ) %>%
+            summarise(y=sum(n_dose))) %>%
+ filter( abs( x-y) > .0001 )
+
+df %>% filter( startsWith( lga, '8'))
+
+df_mofi %>% filter( startsWith( lga, '8'))
+
+df_mofi %>% filter( pin == '63322812')
+
+df_mofi %>%
+  filter( is.na( lga) )
+
+  count( lga)
+
+df_mofi %>%
+  filter( endsWith( lga, '99')) %>%
+  count( state, lga)
+
+filter( endsWith( lga, '99')) %>%
+  count( state, lga)
+
+
+  filter( endsWith( lga, '99')) %>%
+  count( state, lga)
+
+
+```
+

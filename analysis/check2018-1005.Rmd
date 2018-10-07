@@ -38,10 +38,10 @@ readstata13::read.dta13( 'data/Continuing_users_for_Dennis_to_check.dta') %>%
   as.tibble() %>% 
   { . } -> mofi
 
-mofi %>%
-  rename( lga=lgacode,
+>%
+  rename( lga=LGA,
          pin=ID, 
-         sex=sex2,
+         sex=gender,
          quantity=qty,
          quarter=dup,
          supply_date=DateSupply,

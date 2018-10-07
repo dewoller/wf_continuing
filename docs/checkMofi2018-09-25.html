@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Mofi Islam and Dennis Wollersheim" />
+
+<meta name="date" content="2018-09-30" />
+
+<title>Continuing users - Check Mofis data 2018-09</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">wf_continuing</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Continuing users - Check Mofis data 2018-09</h1>
+<h4 class="author"><em>Mofi Islam and Dennis Wollersheim</em></h4>
+<h4 class="date"><em>2018-09-30</em></h4>
+
+</div>
+
+
+<p><strong>Last updated:</strong> 2018-09-25</p>
+<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
+<ul>
+<li>
+<p><details> <summary> <strong style="color:red;">✖</strong> <strong>R Markdown file:</strong> uncommitted changes </summary> The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Environment:</strong> empty </summary></p>
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Seed:</strong> <code>set.seed(20180713)</code> </summary></p>
+<p>The command <code>set.seed(20180713)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Session information:</strong> recorded </summary></p>
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/dewoller/wf_continuing/tree/7a65b24a4cb29b414f16ad9804a53d6c8d7225be" target="_blank">7a65b24</a> </summary></p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<pre><code>
+Ignored files:
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/hypothesis1_cache/
+    Ignored:    cache/
+    Ignored:    data/
+
+Untracked files:
+    Untracked:  analysis/checkMofi2018-09-25.Rmd
+
+Unstaged changes:
+    Modified:   analysis/CreateGraphsMofi.Rmd
+    Modified:   lib/standardisation.R
+
+</code></pre>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes. </details>
+</li>
+</ul>
+<hr />
+<pre class="r"><code>getwd()</code></pre>
+<pre><code>[1] &quot;/home/dewoller/mydoc/research/mofi/wf_continuing&quot;</code></pre>
+<pre class="r"><code>rm(list=ls())
+options(width = 200)
+show_code = FALSE
+getwd()
+source(&quot;lib/functions.R&quot;)
+source(&quot;lib/standardisation.R&quot;)
+source(&quot;lib/get_data.R&quot;)
+source(&quot;lib/generate_data_frames.R&quot;)</code></pre>
+<div id="check-mofis-data-2018-09" class="section level1">
+<h1>Check Mofis data 2018-09</h1>
+<pre class="r"><code>data.cache( generate_data_frames )</code></pre>
+<div id="count_by_quarters" class="section level2">
+<h2>count_by_quarters</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+n_quarter
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+pct
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+196169
+</td>
+<td style="text-align:right;">
+52.70
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+73104
+</td>
+<td style="text-align:right;">
+19.64
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+31860
+</td>
+<td style="text-align:right;">
+8.56
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+16761
+</td>
+<td style="text-align:right;">
+4.50
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+10107
+</td>
+<td style="text-align:right;">
+2.72
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+7068
+</td>
+<td style="text-align:right;">
+1.90
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+5326
+</td>
+<td style="text-align:right;">
+1.43
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+4090
+</td>
+<td style="text-align:right;">
+1.10
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+3459
+</td>
+<td style="text-align:right;">
+0.93
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+3030
+</td>
+<td style="text-align:right;">
+0.81
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+2625
+</td>
+<td style="text-align:right;">
+0.71
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+2344
+</td>
+<td style="text-align:right;">
+0.63
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+2200
+</td>
+<td style="text-align:right;">
+0.59
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+2242
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+2574
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+9249
+</td>
+<td style="text-align:right;">
+2.48
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="figure/checkMofi2018-09-25.Rmd/count_by_quarters-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="overall_combined" class="section level2">
+<h2>Overall_combined</h2>
+<div id="number-of-users-by-age-and-usertype-percentage-of-usertype" class="section level3">
+<h3>Number of users by age and usertype, percentage of usertype</h3>
+<pre><code>Joining, by = &quot;pin&quot;</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+usage_category
+</th>
+<th style="text-align:right;">
+0-19
+</th>
+<th style="text-align:right;">
+20-44
+</th>
+<th style="text-align:right;">
+45-64
+</th>
+<th style="text-align:right;">
+65+
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+one-off
+</td>
+<td style="text-align:right;">
+7.11
+</td>
+<td style="text-align:right;">
+42.41
+</td>
+<td style="text-align:right;">
+29.80
+</td>
+<td style="text-align:right;">
+20.67
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short-term
+</td>
+<td style="text-align:right;">
+2.17
+</td>
+<td style="text-align:right;">
+33.73
+</td>
+<td style="text-align:right;">
+31.24
+</td>
+<td style="text-align:right;">
+32.85
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long-term
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+<td style="text-align:right;">
+16.99
+</td>
+<td style="text-align:right;">
+32.57
+</td>
+<td style="text-align:right;">
+50.25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+regular
+</td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+10.02
+</td>
+<td style="text-align:right;">
+35.70
+</td>
+<td style="text-align:right;">
+54.24
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="number-of-users-by-age-and-usertype-percentage-of-age" class="section level3">
+<h3>Number of users by age and usertype, percentage of age</h3>
+<pre><code>Joining, by = &quot;pin&quot;</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+usage_category
+</th>
+<th style="text-align:right;">
+0-19
+</th>
+<th style="text-align:right;">
+20-44
+</th>
+<th style="text-align:right;">
+45-64
+</th>
+<th style="text-align:right;">
+65+
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+one-off
+</td>
+<td style="text-align:right;">
+81.50
+</td>
+<td style="text-align:right;">
+61.05
+</td>
+<td style="text-align:right;">
+51.14
+</td>
+<td style="text-align:right;">
+38.81
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short-term
+</td>
+<td style="text-align:right;">
+18.28
+</td>
+<td style="text-align:right;">
+35.70
+</td>
+<td style="text-align:right;">
+39.41
+</td>
+<td style="text-align:right;">
+45.35
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long-term
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+<td style="text-align:right;">
+2.21
+</td>
+<td style="text-align:right;">
+5.06
+</td>
+<td style="text-align:right;">
+8.54
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+regular
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+1.03
+</td>
+<td style="text-align:right;">
+4.39
+</td>
+<td style="text-align:right;">
+7.30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="number-of-users-by-age-and-usertype-and-state-percentage-of-age" class="section level3">
+<h3>Number of users by age and usertype and state, percentage of age</h3>
+<pre><code>Joining, by = &quot;pin&quot;</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+usage_category
+</th>
+<th style="text-align:left;">
+state
+</th>
+<th style="text-align:right;">
+0-19
+</th>
+<th style="text-align:right;">
+20-44
+</th>
+<th style="text-align:right;">
+45-64
+</th>
+<th style="text-align:right;">
+65+
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+one-off
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:right;">
+7.00
+</td>
+<td style="text-align:right;">
+41.36
+</td>
+<td style="text-align:right;">
+30.35
+</td>
+<td style="text-align:right;">
+21.29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short-term
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:right;">
+2.02
+</td>
+<td style="text-align:right;">
+31.72
+</td>
+<td style="text-align:right;">
+31.66
+</td>
+<td style="text-align:right;">
+34.60
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long-term
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:right;">
+0.16
+</td>
+<td style="text-align:right;">
+15.51
+</td>
+<td style="text-align:right;">
+32.14
+</td>
+<td style="text-align:right;">
+52.19
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+regular
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+8.99
+</td>
+<td style="text-align:right;">
+35.19
+</td>
+<td style="text-align:right;">
+55.77
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+one-off
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:right;">
+7.24
+</td>
+<td style="text-align:right;">
+43.59
+</td>
+<td style="text-align:right;">
+29.19
+</td>
+<td style="text-align:right;">
+19.98
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short-term
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:right;">
+2.33
+</td>
+<td style="text-align:right;">
+35.89
+</td>
+<td style="text-align:right;">
+30.79
+</td>
+<td style="text-align:right;">
+30.98
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long-term
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+<td style="text-align:right;">
+18.84
+</td>
+<td style="text-align:right;">
+33.12
+</td>
+<td style="text-align:right;">
+47.82
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+regular
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:right;">
+0.02
+</td>
+<td style="text-align:right;">
+11.31
+</td>
+<td style="text-align:right;">
+36.34
+</td>
+<td style="text-align:right;">
+52.33
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="ddd_by_year_and_state" class="section level3">
+<h3>ddd_by_year_and_state</h3>
+<pre><code>Joining, by = &quot;pin&quot;
+Joining, by = &quot;pin&quot;</code></pre>
+<pre><code>Warning: Column `supply_year` joining factors with different levels, coercing to character vector</code></pre>
+<pre><code>Warning: Column `supply_year` joining character vector and factor, coercing into character vector
+
+Warning: Column `supply_year` joining character vector and factor, coercing into character vector</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+supply_year
+</th>
+<th style="text-align:left;">
+state
+</th>
+<th style="text-align:right;">
+one-off
+</th>
+<th style="text-align:right;">
+short-term
+</th>
+<th style="text-align:right;">
+long-term
+</th>
+<th style="text-align:right;">
+regular
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+2013
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:right;">
+0.6383097
+</td>
+<td style="text-align:right;">
+3.216303
+</td>
+<td style="text-align:right;">
+2.651683
+</td>
+<td style="text-align:right;">
+8.526021
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2014
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:right;">
+0.5490987
+</td>
+<td style="text-align:right;">
+2.439458
+</td>
+<td style="text-align:right;">
+3.139524
+</td>
+<td style="text-align:right;">
+9.026157
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2015
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:right;">
+0.5502903
+</td>
+<td style="text-align:right;">
+2.192478
+</td>
+<td style="text-align:right;">
+3.207611
+</td>
+<td style="text-align:right;">
+9.002809
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:right;">
+0.5947590
+</td>
+<td style="text-align:right;">
+2.509148
+</td>
+<td style="text-align:right;">
+2.735105
+</td>
+<td style="text-align:right;">
+8.372644
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2013
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:right;">
+0.6529820
+</td>
+<td style="text-align:right;">
+3.136456
+</td>
+<td style="text-align:right;">
+2.559492
+</td>
+<td style="text-align:right;">
+8.748890
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2014
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:right;">
+0.5435527
+</td>
+<td style="text-align:right;">
+2.393317
+</td>
+<td style="text-align:right;">
+2.978648
+</td>
+<td style="text-align:right;">
+9.075984
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2015
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:right;">
+0.5441866
+</td>
+<td style="text-align:right;">
+2.183285
+</td>
+<td style="text-align:right;">
+3.084907
+</td>
+<td style="text-align:right;">
+8.987128
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:right;">
+0.5844044
+</td>
+<td style="text-align:right;">
+2.592955
+</td>
+<td style="text-align:right;">
+2.529736
+</td>
+<td style="text-align:right;">
+8.407670
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="ddd_by_drug_type" class="section level3">
+<h3>ddd_by_drug_type</h3>
+<pre><code>Joining, by = &quot;pin&quot;
+Joining, by = &quot;pin&quot;</code></pre>
+<pre><code>Warning: Column `supply_year` joining character vector and factor, coercing into character vector
+
+Warning: Column `supply_year` joining character vector and factor, coercing into character vector
+
+Warning: Column `supply_year` joining character vector and factor, coercing into character vector</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+type_name
+</th>
+<th style="text-align:left;">
+state
+</th>
+<th style="text-align:left;">
+supply_year
+</th>
+<th style="text-align:right;">
+one-off
+</th>
+<th style="text-align:right;">
+short-term
+</th>
+<th style="text-align:right;">
+long-term
+</th>
+<th style="text-align:right;">
+regular
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Bupre
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0050658
+</td>
+<td style="text-align:right;">
+0.1037212
+</td>
+<td style="text-align:right;">
+0.1349020
+</td>
+<td style="text-align:right;">
+0.3290595
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fentanyl
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0056207
+</td>
+<td style="text-align:right;">
+0.1140958
+</td>
+<td style="text-align:right;">
+0.2047354
+</td>
+<td style="text-align:right;">
+0.8363788
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Hydromorphone
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0073179
+</td>
+<td style="text-align:right;">
+0.0723005
+</td>
+<td style="text-align:right;">
+0.0730771
+</td>
+<td style="text-align:right;">
+0.1896607
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Methadone
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0001453
+</td>
+<td style="text-align:right;">
+0.0080465
+</td>
+<td style="text-align:right;">
+0.0394292
+</td>
+<td style="text-align:right;">
+0.1917099
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Morphine
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0085045
+</td>
+<td style="text-align:right;">
+0.0797737
+</td>
+<td style="text-align:right;">
+0.0668361
+</td>
+<td style="text-align:right;">
+0.4956167
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Oxycodone and Oxy+Nalox
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0790429
+</td>
+<td style="text-align:right;">
+0.5502578
+</td>
+<td style="text-align:right;">
+0.6001880
+</td>
+<td style="text-align:right;">
+2.2168583
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Para_Codeine
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.4359161
+</td>
+<td style="text-align:right;">
+1.1280231
+</td>
+<td style="text-align:right;">
+1.0024001
+</td>
+<td style="text-align:right;">
+2.5029085
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tapentadol
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0045924
+</td>
+<td style="text-align:right;">
+0.0711980
+</td>
+<td style="text-align:right;">
+0.1129873
+</td>
+<td style="text-align:right;">
+0.1917724
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tramadol
+</td>
+<td style="text-align:left;">
+NSW
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0485534
+</td>
+<td style="text-align:right;">
+0.3817311
+</td>
+<td style="text-align:right;">
+0.5005495
+</td>
+<td style="text-align:right;">
+1.4186788
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bupre
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0046470
+</td>
+<td style="text-align:right;">
+0.1284853
+</td>
+<td style="text-align:right;">
+0.1701312
+</td>
+<td style="text-align:right;">
+0.4162044
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fentanyl
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0028059
+</td>
+<td style="text-align:right;">
+0.0978055
+</td>
+<td style="text-align:right;">
+0.1435337
+</td>
+<td style="text-align:right;">
+0.5462871
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Hydromorphone
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0016376
+</td>
+<td style="text-align:right;">
+0.0291158
+</td>
+<td style="text-align:right;">
+0.0381368
+</td>
+<td style="text-align:right;">
+0.3470803
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Methadone
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0001268
+</td>
+<td style="text-align:right;">
+0.0147592
+</td>
+<td style="text-align:right;">
+0.0114251
+</td>
+<td style="text-align:right;">
+0.1823030
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Morphine
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0090156
+</td>
+<td style="text-align:right;">
+0.0851740
+</td>
+<td style="text-align:right;">
+0.0653573
+</td>
+<td style="text-align:right;">
+0.6057981
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Oxycodone and Oxy+Nalox
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0983687
+</td>
+<td style="text-align:right;">
+0.5738136
+</td>
+<td style="text-align:right;">
+0.5407679
+</td>
+<td style="text-align:right;">
+1.8151105
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Para_Codeine
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.4006385
+</td>
+<td style="text-align:right;">
+1.1142083
+</td>
+<td style="text-align:right;">
+0.9061141
+</td>
+<td style="text-align:right;">
+2.7741708
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tapentadol
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0060026
+</td>
+<td style="text-align:right;">
+0.0847950
+</td>
+<td style="text-align:right;">
+0.1168639
+</td>
+<td style="text-align:right;">
+0.1958444
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tramadol
+</td>
+<td style="text-align:left;">
+VIC
+</td>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+0.0611617
+</td>
+<td style="text-align:right;">
+0.4647983
+</td>
+<td style="text-align:right;">
+0.5374060
+</td>
+<td style="text-align:right;">
+1.5248713
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="ddd_by_year-and-age-group" class="section level3">
+<h3>ddd_by_year and age group</h3>
+<pre><code>Joining, by = &quot;pin&quot;
+Joining, by = &quot;pin&quot;</code></pre>
+<pre><code>Warning: Column `supply_year` joining character vector and factor, coercing into character vector
+
+Warning: Column `supply_year` joining character vector and factor, coercing into character vector
+
+Warning: Column `supply_year` joining character vector and factor, coercing into character vector</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+usage_category
+</th>
+<th style="text-align:right;">
+2013 0-19
+</th>
+<th style="text-align:right;">
+2013 20-44
+</th>
+<th style="text-align:right;">
+2013 45-64
+</th>
+<th style="text-align:right;">
+2013 65+
+</th>
+<th style="text-align:right;">
+2014 0-19
+</th>
+<th style="text-align:right;">
+2014 20-44
+</th>
+<th style="text-align:right;">
+2014 45-64
+</th>
+<th style="text-align:right;">
+2014 65+
+</th>
+<th style="text-align:right;">
+2015 0-19
+</th>
+<th style="text-align:right;">
+2015 20-44
+</th>
+<th style="text-align:right;">
+2015 45-64
+</th>
+<th style="text-align:right;">
+2015 65+
+</th>
+<th style="text-align:right;">
+2016 0-19
+</th>
+<th style="text-align:right;">
+2016 20-44
+</th>
+<th style="text-align:right;">
+2016 45-64
+</th>
+<th style="text-align:right;">
+2016 65+
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+one-off
+</td>
+<td style="text-align:right;">
+0.1346011
+</td>
+<td style="text-align:right;">
+0.6711954
+</td>
+<td style="text-align:right;">
+0.8216512
+</td>
+<td style="text-align:right;">
+1.147181
+</td>
+<td style="text-align:right;">
+0.1400060
+</td>
+<td style="text-align:right;">
+0.6434641
+</td>
+<td style="text-align:right;">
+0.6801225
+</td>
+<td style="text-align:right;">
+0.7748579
+</td>
+<td style="text-align:right;">
+0.1438241
+</td>
+<td style="text-align:right;">
+0.6476888
+</td>
+<td style="text-align:right;">
+0.6734983
+</td>
+<td style="text-align:right;">
+0.7702652
+</td>
+<td style="text-align:right;">
+0.1612286
+</td>
+<td style="text-align:right;">
+0.6625239
+</td>
+<td style="text-align:right;">
+0.7290855
+</td>
+<td style="text-align:right;">
+0.8912487
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short-term
+</td>
+<td style="text-align:right;">
+0.0711276
+</td>
+<td style="text-align:right;">
+1.8144473
+</td>
+<td style="text-align:right;">
+4.0371923
+</td>
+<td style="text-align:right;">
+10.254967
+</td>
+<td style="text-align:right;">
+0.0900463
+</td>
+<td style="text-align:right;">
+1.5950634
+</td>
+<td style="text-align:right;">
+3.1378111
+</td>
+<td style="text-align:right;">
+7.0574065
+</td>
+<td style="text-align:right;">
+0.0983403
+</td>
+<td style="text-align:right;">
+1.5352648
+</td>
+<td style="text-align:right;">
+3.0440791
+</td>
+<td style="text-align:right;">
+5.7222013
+</td>
+<td style="text-align:right;">
+0.1062158
+</td>
+<td style="text-align:right;">
+1.7370718
+</td>
+<td style="text-align:right;">
+3.5203716
+</td>
+<td style="text-align:right;">
+6.7378365
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long-term
+</td>
+<td style="text-align:right;">
+0.0039313
+</td>
+<td style="text-align:right;">
+1.1460023
+</td>
+<td style="text-align:right;">
+3.6158288
+</td>
+<td style="text-align:right;">
+8.749233
+</td>
+<td style="text-align:right;">
+0.0082510
+</td>
+<td style="text-align:right;">
+1.3444499
+</td>
+<td style="text-align:right;">
+4.2993684
+</td>
+<td style="text-align:right;">
+10.0714899
+</td>
+<td style="text-align:right;">
+0.0149651
+</td>
+<td style="text-align:right;">
+1.6014741
+</td>
+<td style="text-align:right;">
+4.5897959
+</td>
+<td style="text-align:right;">
+9.4536431
+</td>
+<td style="text-align:right;">
+0.0131444
+</td>
+<td style="text-align:right;">
+1.4317099
+</td>
+<td style="text-align:right;">
+4.0741952
+</td>
+<td style="text-align:right;">
+7.2933002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+regular
+</td>
+<td style="text-align:right;">
+0.0080094
+</td>
+<td style="text-align:right;">
+2.6302949
+</td>
+<td style="text-align:right;">
+15.8924165
+</td>
+<td style="text-align:right;">
+25.000049
+</td>
+<td style="text-align:right;">
+0.0101150
+</td>
+<td style="text-align:right;">
+3.0597002
+</td>
+<td style="text-align:right;">
+16.4470407
+</td>
+<td style="text-align:right;">
+25.6259424
+</td>
+<td style="text-align:right;">
+0.0066329
+</td>
+<td style="text-align:right;">
+3.1490496
+</td>
+<td style="text-align:right;">
+16.3767387
+</td>
+<td style="text-align:right;">
+24.9375071
+</td>
+<td style="text-align:right;">
+0.0101296
+</td>
+<td style="text-align:right;">
+2.9496054
+</td>
+<td style="text-align:right;">
+15.3045805
+</td>
+<td style="text-align:right;">
+22.9713098
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="dose_event-by-year-and-number-of-quarters" class="section level3">
+<h3>dose_event by year and number of quarters</h3>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.4 (2018-03-15)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 17.10
+
+Matrix products: default
+BLAS: /usr/lib/x86_64-linux-gnu/openblas/libblas.so.3
+LAPACK: /usr/lib/x86_64-linux-gnu/libopenblasp-r0.2.20.so
+
+locale:
+ [1] LC_CTYPE=en_AU.UTF-8       LC_NUMERIC=C               LC_TIME=en_AU.UTF-8        LC_COLLATE=en_AU.UTF-8     LC_MONETARY=en_AU.UTF-8    LC_MESSAGES=en_AU.UTF-8    LC_PAPER=en_AU.UTF-8      
+ [8] LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_AU.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] bindrcpp_0.2.2    keyring_1.1.0     RPostgreSQL_0.6-2 DBI_1.0.0         forcats_0.3.0     dplyr_0.7.6       purrr_0.2.5       readr_1.1.1       tidyr_0.8.1       tibble_1.4.2     
+[11] ggplot2_2.2.1     tidyverse_1.2.1   shiny_1.1.0       DataCache_0.9     ordinal_2018.4-19 foreign_0.8-70    readstata13_0.9.2 tmaptools_2.0     tmap_2.0          lubridate_1.7.4  
+[21] pander_0.6.2      kableExtra_0.9.0  knitr_1.20        broom_0.5.0       stringr_1.3.1     magrittr_1.5      seas_0.5-2        MASS_7.3-50       data.table_1.11.4 wrapr_1.5.1      
+[31] nvimcom_0.9-75   
+
+loaded via a namespace (and not attached):
+ [1] colorspace_1.3-2   class_7.3-14       gdalUtils_2.0.1.14 leaflet_2.0.1      rgdal_1.3-3        rprojroot_1.3-2    satellite_1.0.1    base64enc_0.1-3    dichromat_2.0-0    rstudioapi_0.7    
+[11] xml2_1.2.0         codetools_0.2-15   R.methodsS3_1.7.1  jsonlite_1.5       workflowr_1.1.1    png_0.1-7          R.oo_1.22.0        rgeos_0.3-28       compiler_3.4.4     httr_1.3.1        
+[21] backports_1.1.2    mapview_2.4.0      assertthat_0.2.0   Matrix_1.2-14      lazyeval_0.2.1     cli_1.0.0          later_0.7.3        htmltools_0.3.6    tools_3.4.4        gtable_0.2.0      
+[31] glue_1.3.0         Rcpp_0.12.18       cellranger_1.1.0   raster_2.6-7       nlme_3.1-137       iterators_1.0.10   crosstalk_1.0.0    lwgeom_0.1-4       rvest_0.3.2        mime_0.5          
+[41] XML_3.98-1.12      scales_0.5.0       hms_0.4.2          promises_1.0.1     parallel_3.4.4     RColorBrewer_1.1-2 yaml_2.1.19        stringi_1.2.3      ucminf_1.1-4       highr_0.7         
+[51] foreach_1.4.4      e1071_1.6-8        spData_0.2.9.0     rlang_0.2.2        pkgconfig_2.0.1    evaluate_0.10.1    lattice_0.20-35    bindr_0.1.1        sf_0.6-3           htmlwidgets_1.2   
+[61] labeling_0.3       tidyselect_0.2.4   plyr_1.8.4         R6_2.2.2           pillar_1.3.0       haven_1.1.2        whisker_0.3-2      units_0.6-0        sp_1.3-1           modelr_0.1.2      
+[71] crayon_1.3.4       KernSmooth_2.23-15 rmarkdown_1.10     readxl_1.1.0       git2r_0.23.0       digest_0.6.15      classInt_0.2-3     webshot_0.5.0      xtable_1.8-2       httpuv_1.4.5      
+[81] R.utils_2.6.0      stats4_3.4.4       munsell_0.5.0      viridisLite_0.3.0 </code></pre>
+</div>
+</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
+  analysis was created with
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.1.1
+</p>
+<hr>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

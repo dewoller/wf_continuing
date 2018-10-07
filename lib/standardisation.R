@@ -204,8 +204,15 @@ function () {
 
 }
 
+#undebug( f_join_population )
+
 #  -------------------------------------------------
-select_and_standardise_ddd <- function( df, standardise_over, join_with, localf_join_population = f_join_population) {
+select_and_standardise_ddd <- function( df, 
+                                       standardise_over, 
+                                       join_with = c()
+                                       , 
+                                       localf_join_population = f_join_population
+                                       ) {
   # select out standardise_over and join_with from df,
   # standardising value based on standardise_using, generally sex and age
 
@@ -218,17 +225,19 @@ select_and_standardise_ddd <- function( df, standardise_over, join_with, localf_
   # what 
 
 
-  standardise_using <- qw("age sex supply_year")  %>%   
+  standardise_using <- qw("age sex")  %>%   
     setdiff( standardise_over ) %>% 
       setdiff( join_with )
 
     df %>%  # group by everything we want to group by to get base level number of doses
       ungroup() %>%
-        group_by_( .dots=c( standardise_over, join_with, standardise_using )) %>%
-        summarise( n_dose=sum(n_dose )) %>%
+        group_by_( .dots=c( standardise_over, join_with, standardise_using, 'supply_year' )) %>%
+        summarise( n_dose = sum( n_dose ) ) %>%
+        ungroup() %>%
         # join up with population on the maximal set of the same variables
-        localf_join_population ( c( standardise_over, join_with, standardise_using )) %>%
-        mutate( proportion = (n_dose * 1000 * 10) / (population * my_year_length( supply_year ) )) %>%  # calculate proportion at this level
+        localf_join_population ( c( standardise_over, join_with, standardise_using, 'supply_year' )) %>%
+        group_by_( .dots=c( standardise_over, join_with, standardise_using )) %>%
+        summarise( proportion = sum((n_dose * 1000 * 10)) / sum(population * my_year_length( supply_year ) )) %>%  # calculate proportion at this level
 
         # now that we have the proportion for each subgroup,
         # now we standardise that proportion based on the total population
