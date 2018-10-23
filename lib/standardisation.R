@@ -31,12 +31,14 @@ standardisation_test = function() {
 
 get_population_grouped = function ( pop, rollup_level = NA) {
   if (typeof(rollup_level ) == "logical" && is.na( rollup_level )) {
-    pop %>% ungroup() %>%
-      summarize( population=sum(population)  )
+    pop %>% 
+      ungroup() %>%
+      dplyr::summarize( population=sum(population)  )
   } else {
-    pop %>% ungroup() %>%
+    pop %>% 
+      ungroup() %>%
       group_by_( .dots=rollup_level ) %>%
-      summarize( population=sum(population)  )
+      dplyr::summarize( population=sum(population)  )
   }
 }
 
@@ -76,7 +78,7 @@ f_join_population = function( dataset,
       mutate(temp=1) %>% 
       inner_join( get_population_grouped( df_population. ) %>% mutate(temp=1)
                   ,by="temp") %>%
-      select(-temp) 
+      dplyr::select(-temp) 
   } else {
     dataset %>%
       inner_join( get_population_grouped(  df_population., available_rollup_vars ),  by=join_key)
@@ -206,11 +208,15 @@ function () {
 
 #undebug( f_join_population )
 
+standardise_over=qw('sex')
+
+join_with=qw('supply_year')
+
+
 #  -------------------------------------------------
 select_and_standardise_ddd <- function( df, 
                                        standardise_over, 
-                                       join_with = c()
-                                       , 
+                                       join_with = c() , 
                                        localf_join_population = f_join_population
                                        ) {
   # select out standardise_over and join_with from df,
@@ -232,12 +238,12 @@ select_and_standardise_ddd <- function( df,
     df %>%  # group by everything we want to group by to get base level number of doses
       ungroup() %>%
         group_by_( .dots=c( standardise_over, join_with, standardise_using, 'supply_year' )) %>%
-        summarise( n_dose = sum( n_dose ) ) %>%
+        dplyr::summarise( n_dose = sum( n_dose ) ) %>%
         ungroup() %>%
         # join up with population on the maximal set of the same variables
         localf_join_population ( c( standardise_over, join_with, standardise_using, 'supply_year' )) %>%
         group_by_( .dots=c( standardise_over, join_with, standardise_using )) %>%
-        summarise( proportion = sum((n_dose * 1000 * 10)) / sum(population * my_year_length( supply_year ) )) %>%  # calculate proportion at this level
+        dplyr::summarise( proportion = sum((n_dose * 1000 * 10)) / sum(population * my_year_length( supply_year ) )) %>%  # calculate proportion at this level
 
         # now that we have the proportion for each subgroup,
         # now we standardise that proportion based on the total population
@@ -260,7 +266,7 @@ select_and_standardise_ddd <- function( df,
           # now, sum up our standardized_proportion, 
           # grouped on age and/or sex as long as we ae not using it elsewhere
           group_by_( .dots=c( standardise_over, join_with )) %>%  # no standardize_vars here
-          summarise( proportion_standardized = sum(proportion_standardized )) %>%
+          dplyr::summarise( proportion_standardized = sum(proportion_standardized )) %>%
             select_( .dots = c( standardise_over, join_with, "proportion_standardized") ) %>% # and cleanup
 
             # get population completely rolled up, so we can divide

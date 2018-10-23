@@ -24,7 +24,7 @@ get_continuing_df <- function(
   my_db_get_query( query ) %>%
     as.tibble() %>%
     mutate( n_dose = (unit_wt * quantity / ddd_mg_factor ),
-           agen=ifelse( age=='100+', 101, as.numeric( age )),
+           agen=ifelse( age=='100+', 100, as.numeric( age )),
            lga = ifelse( lga!='.', lga, 
                         ifelse( state=='VIC', '2_NA', '1_NA')),
            age = cut( agen, 
@@ -238,7 +238,7 @@ get_seifa_df <- function( state_id ) {
     mutate(
            seifa  = 
              ntile(  irsd_score_raw , 4)  %>%
-             ordered(  levels = 1:4, labels = c("Least", "Moderate", "High", "Very High"))
+             ordered(  levels = 1:4, labels = c("Low", "Moderate", "High", "Very High"))
            ) %>%
     mutate( urbanization = which_urbanisation( lga, class_type ))  %>%
     mutate_at( c( "class_type", "class_name", "urbanization"), funs( factor(.) ) ) %>%
@@ -268,57 +268,5 @@ calculate_ddd <- function( dataset, ds_group_by , location_join, location_select
 }
 
 
-
-
-# -------------------------------------------------
-
-get_state_capital_xlim <- function( state_id ) { 
-  get_state_geo_df ( state_id ) %$%
-    c(capital_tl_lon, capital_br_lon) %>% sort()
-}
-# -------------------------------------------------
-
-get_state_capital_ylim <- function( state_id ) { 
-  get_state_geo_df ( state_id ) %$%
-    c(capital_tl_lat, capital_br_lat) %>% sort()
-}
-
-# -------------------------------------------------
-
-get_state_capital_bb <- function( state_id ) { 
-  get_state_geo_df ( state_id ) %$%
-    matrix(c(capital_tl_lat,capital_tl_lon, capital_br_lat,capital_br_lon), nrow=2, byrow=TRUE)
-}
-
-# -------------------------------------------------
-
-get_state_geo_df <- function( state_id ) {
-
-  state_geo_query   <-   paste( "
-                               SELECT * FROM state_geo
-                               WHERE  state_id = "
-                               ,  state_id
-                               , sep = ""
-                               )
-
-  my_db_get_query( state_geo_query ) %>%
-    summarise(
-              state_id = first( state_id )
-              , capital = first( capital )
-              , capital_tl_lat = first( capital_tl_lat )
-              , capital_tl_lon = first( capital_tl_lon )
-              , capital_br_lat = first( capital_br_lat )
-              , capital_br_lon = first( capital_br_lon )
-              , state_center_lat = mean( state_center_lat )
-              , state_center_lon = mean( state_center_lon )
-              , state_tl_lat = max( state_tl_lat )
-              , state_tl_lon = max( state_tl_lon )
-              , state_br_lat = min( state_br_lat )
-              , state_br_lon = min( state_br_lon )
-              ) %>%
-  mutate_at( c( "state_id", "capital"), funs( factor(.) ) ) %>%
-  as.tibble() %>%
-  return( . )
-}
 
 

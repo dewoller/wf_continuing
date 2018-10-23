@@ -67,16 +67,18 @@ df_mofi %>%
   filter( state != 'ACT') %>% 
   { . } -> df_mofi
 
-unit_wt=ifelse( item_code=='02124T', 2000, unit_wt),
-ddd_mg_factor=ifelse( item_code=='08423H', 4, ddd_mg_factor),
 
+# now see what has gone wrong
 df %>% distinct( lga )
 df_mofi %>% distinct( lga )
 
 
 bothDiff(  df %>% select( pin ), df_mofi %>% select(pin))
 
-bothDiff(  df %>% count( pin ), df_mofi %>% count(pin))
+bothDiff(  df_patient_usage %>% select( pin ), df_mofi %>% select(pin))
+bothDiff(  df_patient_usage %>% select( pin ), df %>% select(pin))
+
+bothDiff(  df %>% count( pin ), df_mofssssss %>% count(pin))
 
 bothDiff(  df %>% select( item_code ), df_mofi %>% select(item_code))
 
@@ -115,6 +117,9 @@ filter( endsWith( lga, '99')) %>%
 
   filter( endsWith( lga, '99')) %>%
   count( state, lga)
+
+
+```
 
 
 ```

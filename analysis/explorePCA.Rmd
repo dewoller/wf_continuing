@@ -1,0 +1,98 @@
+
+---
+title: "Check"
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-04-30"
+output: 
+  word_document:
+    reference_docx: ../../common/word_reference_style.docx
+---
+
+
+```{r set-options, echo=FALSE, cache=FALSE, warning=FALSE, results='hide'}
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+source("lib/functions.R")
+source("lib/get_data.R")
+source("lib/generate_data_frames.R")
+source("lib/standardisation.R")
+library( ggbiplot )
+```
+#Methods
+
+```{r data_preparation, echo=FALSE, cache=FALSE, results="hide", warning=FALSE}
+
+data.cache( generate_data_frames, frequency='yearly')
+df %<>% filter( lga != '.')
+
+```
+#powerpoint slide 1
+```{r lgaxseifa, echo=FALSE}
+
+df %>%
+  select_and_standardise_ddd( standardise_over=qw('lga type_name'), join_with=qw('lga')) %>%
+  f_join_population( rollup_level=qw('seifa lga'), join_key='lga') %>%
+  select( -population ) %>%
+  spread( type_name, ddd ) %>% 
+  ungroup() %>%
+  replace(., is.na( .), 0) %>%
+  { . } -> df_pca
+
+df_pca %>%
+  select( -lga, -seifa ) %>%
+  prcomp(center = TRUE,scale. = TRUE) %>% 
+  { . } -> pca
+
+ggbiplot(pca,ellipse=TRUE,  labels=df_pca$lga, groups=df_pca$seifa )
+
+```
+
+```{r lgaxseifa, echo=FALSE}
+
+df %>%
+  select_and_standardise_ddd( standardise_over=qw('sex age'), join_with=qw('lga')) %>%
+  f_join_population( rollup_level=qw('seifa lga'), join_key='lga') %>%
+  select( -population ) %>%
+  spread( type_name, ddd ) %>% 
+  ungroup() %>%
+  replace(., is.na( .), 0) %>%
+  { . } -> df_pca
+
+df_pca %>%
+  select( -lga, -seifa ) %>%
+  prcomp(center = TRUE,scale. = TRUE) %>% 
+  { . } -> pca
+
+ggbiplot(pca,ellipse=TRUE,  labels=df_pca$lga, groups=df_pca$seifa )
+
+```
+```{r}
+
+
+summary(pca)
+
+ggbiplot( pca )
+
+
+library(factoextra)
+
+
+fviz_eig(pca)
+
+
+fviz_pca_ind(pca,
+             col.ind = "cos2", # Color by the quality of representation
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )
+
+
+fviz_pca_var(pca,
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )
+```
+
+

@@ -1,0 +1,455 @@
+
+---
+title: "Check"
+author:  "Mofi Islam and Dennis Wollersheim "
+date: "2018-04-30"
+output: 
+  word_document:
+    reference_docx: ../../common/word_reference_style.docx
+---
+
+
+```{r set-options, echo=FALSE, cache=FALSE, warning=FALSE, results='hide'}
+rm(list=ls())
+options(width = 200)
+show_code = FALSE
+source("lib/functions.R")
+source("lib/get_data.R")
+source("lib/generate_data_frames.R")
+source("lib/standardisation.R")
+```
+#Methods
+
+```{r data_preparation, echo=FALSE, cache=FALSE, results="hide", warning=FALSE}
+
+data.cache( generate_data_frames, frequency='yearly')
+
+
+read.dta13('/mnt/sda5/store/aarnet_owncloud/Sharing_between_mofi_and_dennis/Opioid/Opioid/Continuing users for Dennis to check.dta') %>% 
+  as.tibble() %>% 
+  { . } -> df_mofi
+#
+df_mofi %>%
+  select(-lga) %>%
+  rename( lga=lgacode,
+         pin=ID, 
+         sex=sex2,
+         quantity=qty,
+         quarter=dup,
+         supply_date=DateSupply,
+         unit_wt = Unit_wt,
+         ddd_mg_factor = DDD,
+         item_code = Item_code ,
+         n_dose = DDD_q,
+         )  %>%
+  mutate( state=str_trim( state ),
+         sex = substring( sex,1,1),
+         age = age_grouping_mofi( age),
+         lga = as.character( lga ) ,
+         item_code = str_trim(item_code ), 
+         supply_year=as.factor(substring( supply_date,6,9 )),
+         usage_category = levels(df_patient_usage$usage_category)[ userType4 ] ,
+         )  %>% 
+  filter( !is.na( quantity )) %>% 
+  { . } -> df_mofi
+
+ 
+
+```
+```{r fixup_data}
+
+#
+#df_mofi %>% 
+#  filter( item_code != '91194Q') %>% 
+#  { . } -> df_mofi
+#
+#df_mofi %>% 
+#  filter( !is.na(lga )) %>% 
+#  { . } -> df_mofi
+#
+#df_mofi %>% 
+# filter( state!='ACT') %>% 
+#  { . } -> df_mofi
+
+df %>% 
+  filter( !endsWith(lga, '_NA' )) %>% 
+  { . } -> df
+
+df %>% 
+  distinct (pin, sex, age, state, lga) %>% 
+  mutate( sex = as.factor(sex)) %>%
+  inner_join( df_patient_scheme, by="pin") %>%
+  {.} -> df_patient
+
+df%>%  
+  group_by(pin,  supply_year) %>%
+  summarise(
+            n_dose = sum(n_dose),
+            quantity = sum(quantity),
+            n_script = n()
+            ) %>%
+  ungroup() %>%
+  {.} -> df_patient_dose
+
+#
+df%>%
+  group_by(pin) %>%
+  summarise( 
+            n_quarter = n_distinct( quarter ),
+            usage_category= cut( n_quarter, 
+                                c(-1, 1,6,11, 18), 
+                                labels = qw("one-off medium-episodic long-episodic chronic")),
+            ordered_result=TRUE
+            ) %>%
+  {.} -> df_patient_usage
+
+```
+
+```{r}
+
+
+bothDiff( 
+         df_mofi %>% count( item_code  ),
+         df %>% count( item_code  ) ,
+         by='item_code')
+
+bothDiff( 
+         df_mofi %>% count( item_code  ),
+         df %>% count( item_code  ) 
+         )
+
+
+bothDiff( 
+         df_mofi %>% count( pin  ),
+         df %>% count( pin  ) ,
+         )
+
+bothDiff( 
+         df_mofi %>% count( pin  ),
+         df %>% count( pin  ) ,
+         by='pin'
+         )
+
+
+bothDiff( 
+         df_mofi %>% count( lga  ),
+         df %>% count( lga  ) ,
+         by='lga'
+         )
+
+bothDiff( 
+         df_mofi %>% count( lga  ),
+         df %>% count( lga  ) ,
+         )
+
+
+
+bothDiff( 
+         df_mofi %>% count( n_dose  ),
+          df %>% count( n_dose  ) ,
+         )
+
+
+bothDiff( 
+         df_mofi %>%
+           select( item_code, unit_wt ) %>%
+           distinct( item_code, unit_wt ), 
+         df %>% 
+           select( item_code, unit_wt ) %>%
+           distinct( item_code, unit_wt ), 
+         by='item_code'
+)
+
+bothDiff( 
+df_mofi %>%
+  select( item_code, unit_wt ) %>%
+  distinct( item_code, unit_wt ), 
+df %>% 
+  select( item_code, unit_wt ) %>%
+  distinct( item_code, unit_wt ), 
+)
+
+df_mofi %>%
+  select( item_code, unit_wt ) %>%
+  distinct( item_code, unit_wt ) %>% summarise( sum( unit_wt ))
+
+df %>% 
+  select( item_code, unit_wt ) %>%
+  distinct( item_code, unit_wt ) %>% summarise( sum( unit_wt ))
+
+
+bothDiff(
+df_mofi %>% distinct( pin, usage_category ),
+df_patient_usage
+)
+
+df_mofi %>% filter( pin=='7920815992') %>% distinct(eventdate)
+df_mofi %>% filter( pin=='7920815992') %>% distinct(supply_date, eventdate, quarter) %>% arrange( desc( eventdate)) %>% View
+df_mofi %>% filter( pin=='7920815992') %>% distinct(quarter) %>% arrange( desc(quarter)) %>% View
+
+df_mofi %>% summarise( max( quarter))
+
+df %>% filter( pin=='7920815992') %>% distinct(supply_date)
+df %>% filter( pin=='7920815992') %>% distinct(quarter)
+
+df_mofi %>% 
+  select( pin, starts_with('Q'), -quantity, -quarter) %>%
+  gather( quarter, is, -pin ) %>%
+  filter( is==1 ) %>%
+  distinct() %>%
+  count(pin) %>% 
+  { . } -> df_mofi_quarters
+
+df_mofi_quarters %>% filter( pin=='7920815992') 
+
+summarise( df_mofi, sum(n_dose, na.rm=TRUE ))
+summarise( df, sum(n_dose, na.rm=TRUE ))
+
+
+
+bothDiff( 
+         df_mofi %>%
+           group_by( item_code ) %>%
+           summarise( n_dose = sum( n_dose )) ,
+         df %>% 
+           group_by( item_code ) %>%
+           summarise( n_dose = sum( n_dose )) ,
+         )
+
+bothDiff(
+         distinct( df_mofi, item_code ), 
+         distinct( df, item_code )
+         )
+
+
+bothDiff(
+         distinct( df_mofi, pin ), 
+         distinct( df, pin )
+         )
+
+
+bothDiff(
+         distinct( df_mofi, n_dose ), 
+        distinct( df, n_dose )
+         )
+
+sum( df_mofi$n_dose )
+sum( df$n_dose )
+
+```
+
+```{r standardisation}
+
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  inner_join( df_patient_dose ) %>%
+  select_and_standardise_ddd ( qw('usage_category supply_year lga'), join_with=qw('supply_year') ) %>%
+  print()
+
+
+df_mofi %>%
+  group_by( supply_year, lga, userType4 
+  summarise( 
+  select_and_standardise_ddd ( qw('usage_category supply_year lga'), join_with=qw('supply_year') ) %>%
+
+   inner_join( mofi_ddd ) %>%
+  mutate( dddm = dddm*10) %>%
+  filter( abs( ddd - dddm) > .01 ) %>%
+  arrange( desc( abs( ddd - dddm) )) %>%
+  count( usage_category )
+
+
+
+```{r see_if_mofi_gets_th_same_as_me_quartiles}
+
+
+
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  inner_join( df_patient_dose ) %>%
+  select_and_standardise_ddd ( qw('usage_category supply_year lga'), join_with=qw('supply_year') ) %>%
+  group_by( usage_category, supply_year ) %>%
+  mutate( quartile = cut( ddd, quantile( ddd, type=2 ), labels=1:4)) %>%
+  ungroup() %>%
+  filter( usage_category=='chronic' & quartile==4) %>%
+  count( lga ) %>%
+  count(n)
+
+df_mofi %>%
+  select_and_standardise_ddd ( qw('userType4 supply_year lga'), join_with=qw('supply_year') ) %>%
+  group_by( userType4, supply_year ) %>%
+  mutate( quartile = cut( ddd, quantile( ddd, type=2 ), labels=1:4)) %>%
+  ungroup() %>%
+  filter( userType4==4 & quartile==4) %>%
+  count( lga ) %>%
+  count(n)
+
+
+bothDiff(   
+  df_mofi %>%
+    distinct( userType4, pin ) %>%
+    mutate( usage_category = levels(df_patient_usage$usage_category)[ userType4 ] ) %>%
+    select( pin, usage_category ), 
+  df_patient_usage %>%
+    select( pin, usage_category ), 
+  by='pin'
+)
+
+
+df_mofi %>%
+  select( DDD_q_sayl, supply_year, lga, sex, age, usage_category ) %>%
+  distinct() %>% 
+  { . } -> a
+
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  inner_join( df_patient_dose ) %>%
+  ungroup() %>%
+  group_by(  supply_year, lga, sex, age, usage_category ) %>% 
+  summarise( n_dose = sum( n_dose )) %>%
+  { . } -> b
+
+sum(b$n_dose)
+sum(a$DDD_q_sayl)
+
+bothDiff( a, b )
+
+df %>%
+  inner_join( df_patient_usage) %>%
+  filter( usage_category == 'long-episodic' &
+         age=='65+' &
+         sex=='M' &
+         lga == '18710' &
+         supply_year=='2016' ) %>%
+  select( n_dose, everything())
+ 
+df_mofi %>%
+  filter( usage_category == 'long-episodic' &
+          age=='65+' &
+          sex=='Male' &
+          lga == '18710' &
+          supply_year=='2016' ) %>%
+  select( n_dose, everything()) %>% summarise( sum( n_dose ))
+
+
+a %>%
+  inner_join( b, by=qw("supply_year lga sex age usage_category")) %>%
+  mutate( diff =  DDD_q_sayl - n_dose ) %>%
+  select(  diff,  DDD_q_sayl , n_dose, everything() ) %>%
+  filter( diff> .001 ) %>%
+  arrange( desc( diff ))
+
+
+df_mofi %>% count( Tot_NiRi )
+df_mofi %>% count( NiRi )
+df_mofi %>% count( pick_DDD_q_sayl )
+df_mofi %>% count( AusPop )
+df_mofi %>% count( AusPop, age, sex )
+df_mofi %>% count( AusPop, supply_year, state)
+df_mofi %>% count( populato)
+df_mofi %>% count(  supply_year, age, sex,lga)
+df_mofi %>% count( pick_DDD_q_sayl )
+df_mofi %>% count( lga )
+df_mofi %>% count( xxx )
+
+232*2*4
+
+df %>% distinct( pin, lga ) %>% count( lga )
+
+df_mofi %>% select( )
+
+  select_and_standardise_ddd ( qw('usage_category supply_year lga'), join_with=qw('supply_year') ) %>%
+    print()
+
+df_population %>%
+  group_by( supply_year ) %>%
+  summarise( sum( population ))
+
+# part 1 
+
+df_mofi %>% 
+  filter( pick_DDD_q_sayl == 1 ) %>%
+  select(  qw('usage_category supply_year lga age sex DDD_q_sayl ') ) %>% 
+  { . } -> a
+
+df %>%
+  inner_join( df_patient_usage) %>%
+  group_by(usage_category,supply_year,lga,age,sex) %>%
+  dplyr::summarise( n_dose = sum( n_dose ) ) %>%
+  ungroup() %>% 
+  { . } -> b
+
+bothDiff(a,b)
+
+inner_join( a,b) 
+
+sum(a$DDD_q_sayl)
+sum(b$n_dose)
+# we have the same n_dose / DDD_q_sayl
+
+# part2
+
+df_mofi %>% 
+  filter( pick_DDD_q_sayl == 1 ) %>%
+  select(  qw('usage_category supply_year lga age sex DDD_q_sayl populato ') ) %>% 
+  { . } -> a
+
+df %>%
+  inner_join( df_patient_usage) %>%
+  group_by(usage_category,supply_year,lga,age,sex) %>%
+  dplyr::summarise( n_dose = sum( n_dose ) ) %>%
+  ungroup() %>% 
+  f_join_population( qw('usage_category supply_year lga age sex ') ) %>% 
+  { . } -> b
+
+bothDiff(a,b)
+
+inner_join( a,b) 
+
+sum(a$populato)
+sum(b$population)
+# we have the same population by lga, supply_year, age, sex
+
+# part3
+
+df_mofi %>% 
+  filter( pick_DDD_q_sayl == 1 ) %>%
+  select(  qw('usage_category supply_year lga age sex DDD_q_sayl populato AusPop NiRi Tot_NiRi') ) %>% 
+  mutate( m_niri =(DDD_q_sayl/populato)*AusPop ) %>%
+  group_by(usage_category,supply_year,lga, Tot_NiRi) %>%
+  summarise( m_totniri = sum( NiRi )) %>%
+  { . } -> a
+
+df %>%
+  inner_join( df_patient_usage) %>%
+  group_by(usage_category,supply_year,lga,age,sex) %>%
+  dplyr::summarise( n_dose = sum( n_dose ) ) %>%
+  ungroup() %>% 
+  f_join_population( qw('usage_category supply_year lga age sex ') ) %>% 
+  group_by(usage_category,lga,age,sex) %>%
+  dplyr::summarise( proportion = sum((n_dose * 1000 * 10)) / sum(population * my_year_length( supply_year ) )) %>%  # calculate proportion at this level
+  { . } -> b
+
+bothDiff(a,b)
+
+inner_join( a,b) 
+
+sum(a$populato)
+sum(b$population)
+
+
+# egen DDD_q_sayl=sum(DDD_q), by (year lgacode sex2 age4 userType4)
+# egen pick_DDD_q_sayl=tag (DDD_q_sayl year lgacode sex2 age4 userType4)
+# ge NiRi=(DDD_q_sayl/populato)*AusPop if pick_DDD_q_sayl==1
+# egen Tot_NiRi=sum(NiRi), by (year lgacode userType4)
+# ge xxx=.
+# replace xxx=(Tot_NiRi*1000)/(24210809*365) if year==2013
+# replace xxx=(Tot_NiRi*1000)/(24210809*365) if year==2014
+# replace xxx=(Tot_NiRi*1000)/(24210809*365) if year==2015
+# replace xxx=(Tot_NiRi*1000)/(24210809*366) if year==2016
+#  
+# egen pick_xxx= tag (xxx year lgacode userType4)
+# list lgacode xxx if pick_xxx==1 & year==2013 & userType4==1, noobs clean
+# list lgacode xxx if pick_xxx==1 & year==2013 & userType4==2, noobs clean
+# list lgacode xxx if pick_xxx==1 & year==2013 & userType4==3, noobs clean
+# list lgacode xxx if pick_xxx==1 & year==2013 & userType4==4, noobs clean
