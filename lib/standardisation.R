@@ -217,7 +217,8 @@ join_with=qw('supply_year')
 select_and_standardise_ddd <- function( df, 
                                        standardise_over, 
                                        join_with = c() , 
-                                       localf_join_population = f_join_population
+                                       localf_join_population = f_join_population, 
+                                       standardisation_default
                                        ) {
   # select out standardise_over and join_with from df,
   # standardising value based on standardise_using, generally sex and age
@@ -253,31 +254,22 @@ select_and_standardise_ddd <- function( df,
 
         select_( .dots = c(standardise_over, join_with, standardise_using, "proportion") ) %>%
 
-          # get the population grouped by levels we want to standardise on, that is, 
-          # the standardisation variables (possibly age and/or sex, as long as they are not
-          # included in the non-standard_vars), and join_with, eg. supply_year
+        # get the population grouped by levels we want to standardise on, that is, 
+        # the standardisation variables (possibly age and/or sex, as long as they are not
+        # included in the non-standard_vars), and join_with, eg. supply_year
+        inner_join( standardisation_default, by = c(standardise_using ) ) %>%
+        mutate( proportion_standardized = proportion * population ) %>%  
 
-          # this next call differentiiates standardise_over and join_with, 
-          # we rollup the pupulation by grouping on everything apart from the standardise_over
-          # for example, we might put lga or state in standardise_over, and rollup to that
-          localf_join_population ( c(standardise_using,  join_with)) %>% 
-          mutate( proportion_standardized = proportion * population ) %>%  
-
-          # now, sum up our standardized_proportion, 
-          # grouped on age and/or sex as long as we ae not using it elsewhere
-          group_by_( .dots=c( standardise_over, join_with )) %>%  # no standardize_vars here
-          dplyr::summarise( proportion_standardized = sum(proportion_standardized )) %>%
-            select_( .dots = c( standardise_over, join_with, "proportion_standardized") ) %>% # and cleanup
-
-            # get population completely rolled up, so we can divide
-            localf_join_population ( join_with ) %>% 
-
-              # divide by the total population, and standardisation finished
-              mutate( ddd = proportion_standardized / population ) %>%  
-
-              # finished standardisation, cleanup by selecting only variables of interest
-              select_( .dots = c(standardise_over, join_with, "ddd") ) %>%
-              ungroup()
+        # now, sum up our standardized_proportion, 
+        # grouped on age and/or sex as long as we ae not using it elsewhere
+        group_by_( .dots=c( standardise_over, join_with )) %>%  # no standardize_vars here
+        dplyr::summarise( proportion_standardized = sum(proportion_standardized )) %>%
+        select_( .dots = c( standardise_over, join_with, "proportion_standardized") ) %>% # and cleanup
+        # divide by the total population, and standardisation finished
+        mutate( ddd = proportion_standardized /  sum(standardisation_default$population) ) %>%  
+        # finished standardisation, cleanup by selecting only variables of interest
+        select_( .dots = c(standardise_over, join_with, "ddd") ) %>%
+        ungroup()
 }
 
 select_and_standardise_ddd_test = function() {

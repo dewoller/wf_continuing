@@ -437,6 +437,74 @@ inner_join( a,b)
 sum(a$populato)
 sum(b$population)
 
+# part 3 unfinished
+
+#part 4
+
+df_mofi %>%
+filter( pick_DDD_q_sayl == 1 ) %>%
+  select(  qw('usage_category supply_year lga xxx') ) %>% 
+  mutate( xxx = xxx * 10) %>%
+  distinct() %>%
+  { . } -> a
+
+df %>%
+  inner_join( df_patient_usage) %>%
+  select_and_standardise_ddd ( qw('usage_category supply_year lga'), 
+                              join_with=qw('supply_year'), 
+                              standardisation_default = standardisation_default  ) %>% 
+  { . } -> b
+
+a %>% distinct(xxx)
+b %>% distinct( ddd )
+
+bothDiff(a,b)
+
+inner_join( a,b) 
+
+sum(a$xxx)
+sum(b$ddd)
+
+df_population %>%
+  filter( supply_year == 2013 ) %>%
+  group_by( age, sex ) %>%
+  summarise( population = sum( population )) %>% 
+  { . } -> standardisation_default_dew
+
+df_mofi %>% distinct( AusPop, age, sex ) %>% 
+  rename( population = AusPop ) %>%
+  { . } -> standardisation_default_mofi
+
+
+standardisation_default_dew %>% 
+  inner_join( standardisation_default_mofi, by=qw( 'age sex')) %>%
+  mutate( population.x / population.y)
+
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  inner_join( df_patient_dose ) %>%
+  select_and_standardise_ddd ( qw('usage_category supply_year lga'), 
+                              join_with=qw('supply_year'), 
+                              standardisation_default = standardisation_default_mofi  ) %>% 
+  group_by( usage_category, supply_year ) %>%
+  mutate( quartile = cut( ddd, quantile( ddd, type=2 ), labels=1:4)) %>%
+  ungroup() %>%
+  filter( usage_category=='chronic' & quartile==4) %>%
+  count( lga ) %>%
+  count(n)
+
+df_patient_usage %>%
+  inner_join( df_patient ) %>%
+  inner_join( df_patient_dose ) %>%
+  select_and_standardise_ddd ( qw('supply_year lga'), 
+                              join_with=qw('supply_year'), 
+                              standardisation_default = standardisation_default_mofi  ) %>% 
+  group_by( supply_year ) %>%
+  mutate( quartile = cut( ddd, quantile( ddd, type=2 ), labels=1:4)) %>%
+  ungroup() %>%
+  filter( quartile==4) %>%
+  count( lga ) %>%
+  count(n)
 
 # egen DDD_q_sayl=sum(DDD_q), by (year lgacode sex2 age4 userType4)
 # egen pick_DDD_q_sayl=tag (DDD_q_sayl year lgacode sex2 age4 userType4)
