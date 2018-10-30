@@ -108,6 +108,16 @@ get_australia_base_map = function(states) {
 }
 
 
+
+# ------------------------------------------------------------------
+get_australia_states_map = function(states) {
+
+  read_shape("~/mydoc/research/mofi/shapefiles/aust_cd66states.shp", current.projection='WGS84')  %>% 
+    subset( STE %in% states ) 
+
+  }
+
+
 # ------------------------------------------------------------------
 #unused?
 getBoundary <- function( state_id ) {

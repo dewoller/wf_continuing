@@ -475,6 +475,8 @@ df_mofi %>% distinct( AusPop, age, sex ) %>%
   rename( population = AusPop ) %>%
   { . } -> standardisation_default_mofi
 
+dput(standardisation_default_mofi)
+
 
 standardisation_default_dew %>% 
   inner_join( standardisation_default_mofi, by=qw( 'age sex')) %>%

@@ -1,5 +1,15 @@
 
 
+# default australian population breakdown for standardisation
+standardisation_default_population = structure(list(age = structure(c(1L, 1L, 2L, 2L, 3L, 3L, 4L,
+                                                                      4L), .Label = c("0-19", "20-44", "45-64", "65+"), class = c("ordered",
+                                                                      "factor")), sex = c("F", "M", "F", "M", "F", "M", "F", "M"),
+                                                    population = c(2945332, 3103585, 4268595, 4278986, 3028266,
+                                                                   2912534, 1956770, 1716741)), class = c("tbl_df", "tbl", "data.frame"
+                                                    ), row.names = c(NA, -8L), .Names = c("age", "sex", "population"
+                                                    ))
+
+
 standardisation_test = function() {
 
   read.csv('data/standardisation.csv') %>%
@@ -218,7 +228,7 @@ select_and_standardise_ddd <- function( df,
                                        standardise_over, 
                                        join_with = c() , 
                                        localf_join_population = f_join_population, 
-                                       standardisation_default
+                                       standardisation_default = standardisation_default_population 
                                        ) {
   # select out standardise_over and join_with from df,
   # standardising value based on standardise_using, generally sex and age
@@ -232,9 +242,15 @@ select_and_standardise_ddd <- function( df,
   # what 
 
 
+
   standardise_using <- qw("age sex")  %>%   
     setdiff( standardise_over ) %>% 
       setdiff( join_with )
+
+  standardisation_default %>%
+    group_by_( .dots=standardise_using ) %>%
+    summarise( population = sum( population )) %>% 
+    { . } -> this_standardisation_default 
 
     df %>%  # group by everything we want to group by to get base level number of doses
       ungroup() %>%
@@ -257,7 +273,7 @@ select_and_standardise_ddd <- function( df,
         # get the population grouped by levels we want to standardise on, that is, 
         # the standardisation variables (possibly age and/or sex, as long as they are not
         # included in the non-standard_vars), and join_with, eg. supply_year
-        inner_join( standardisation_default, by = c(standardise_using ) ) %>%
+        inner_join( this_standardisation_default, by = c(standardise_using ) ) %>%
         mutate( proportion_standardized = proportion * population ) %>%  
 
         # now, sum up our standardized_proportion, 
@@ -266,7 +282,7 @@ select_and_standardise_ddd <- function( df,
         dplyr::summarise( proportion_standardized = sum(proportion_standardized )) %>%
         select_( .dots = c( standardise_over, join_with, "proportion_standardized") ) %>% # and cleanup
         # divide by the total population, and standardisation finished
-        mutate( ddd = proportion_standardized /  sum(standardisation_default$population) ) %>%  
+        mutate( ddd = proportion_standardized /  sum(this_standardisation_default$population) ) %>%  
         # finished standardisation, cleanup by selecting only variables of interest
         select_( .dots = c(standardise_over, join_with, "ddd") ) %>%
         ungroup()

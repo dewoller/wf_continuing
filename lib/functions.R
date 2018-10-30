@@ -40,6 +40,7 @@ safe_load("tidyverse")
 
 #source ("../r/loginlocal.r")
 
+
 keep <- function(x, name) {assign(as.character(substitute(name)), x, pos = 1)}
 qw <- function(x) unlist(strsplit(x, "[[:space:]]+"))
 
